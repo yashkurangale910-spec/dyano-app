@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+li, a{
+    text-decoration: none;
+}
+
+li{
+    list-style-type: none;
+}
+
+:root{
+  --clr-1: #031214;
+  --clr-2: #073438;
+  --clr-3: #216efc;
+  --clr-4: #d11df5;
+  --clr-5: #f7193e;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.hero-heading{
+  font-size: 4rem;
+  font-weight: 700;
+  text-shadow: 1px 2px #cacaca;
+  color: var(--clr-1);
+}
+.hero-heading-p2{
+  /* color: white;
+  font-size: 50px; */
+  text-shadow: 1px 2px #090c0c; 
+  -webkit-text-stroke-width: 0.15rem;
+  -webkit-text-stroke-color: var(--clr-1);
+}
+
+@property --gradient-angle{
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+ 
+
+.card{
+  height: 3.5rem;
+  aspect-ratio: 2.2/1;
+  display: block;
+  color: white;
+  font-size: 1.2rem;
+  background: var(--clr-1);
+  border-radius: 0.5rem;
+  position: relative;
+  border: none;
+}
+
+.card::before,.card::after{
+  content: '';
+  position: absolute;
+  inset: -0.1rem;
+  z-index: -1;
+  background:conic-gradient(
+      from var(--gradient-angle),
+      var(--clr-3),
+      var(--clr-4),
+      var(--clr-5),
+      var(--clr-3));
+  border-radius: inherit;
+  animation: rotation 2s linear infinite;
+}
+
+.card::after{
+  filter : blur(0.5rem);
+}
+
+@keyframes rotation{
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+span{
+    line-height: 4rem;
+}
+
+.inp:focus{
+  outline: none;
+}
