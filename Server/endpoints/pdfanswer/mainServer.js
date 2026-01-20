@@ -7,9 +7,11 @@ import path from "node:path"
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import quizRouter from "./quiz.js"
+import flashcardsRouter from "./flashcards.js"
+import roadmapRouter from "./roadmap.js"
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended:true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,11 +21,13 @@ app.use('/img', express.static(path.join(__dirname, 'img')));
 app.get("/", (req, res) => {
     res.send("<h1>Welcome to Dnyanodaya</h1>")
 })
-app.post('/img',imageGenerator);
+app.post('/img', imageGenerator);
 app.use("/pdf", pdfRouter)
 app.use("/quiz", quizRouter)
+app.use("/flashcards", flashcardsRouter)
+app.use("/roadmap", roadmapRouter)
 
 const PORT = 3005;
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
     console.log(`server is listening on port ${PORT}`)
 });

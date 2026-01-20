@@ -1,0 +1,35 @@
+{
+    "nav": {
+        "dashboard": "Panel",
+        "learn": "Aprender",
+        "pdflab": "Laboratorio PDF",
+        "access_base": "Acceso_Base",
+        "enter_alpha": "Entrar / Alpha"
+    },
+    "hero": {
+        "question": "¿Qué quieres aprender?",
+        "placeholder": "Ingrese un tema o una meta de aprendizaje...",
+        "deep_dive": "Inmersión Profunda",
+        "processing": "Procesando...",
+        "insights": "Perspectivas",
+        "practice_quiz": "Practicar Quiz",
+        "study_flashcards": "Estudiar Flashcards",
+        "generate_roadmap": "Generar Hoja de Ruta"
+    },
+    "common": {
+        "system_interface": "Interfaz_del_Sistema"
+    },
+    "dashboard": {
+        "project_workspace": "Espacio de Trabajo",
+        "alpha_base": "Base Alfa",
+        "init_task": "Iniciar / Tarea",
+        "data_sync": "Datos / Sinc",
+        "status_integrated": "Estado: Integrado / Activo",
+        "consecutive_cycles": "Ciclos_Consecutivos",
+        "fragments_solved": "Fragmentos_Resueltos",
+        "neurons_mapped": "Neuronas_Mapeadas",
+        "active_sequences": "Secuencias_Activas",
+        "neural_stacks": "Pilas_Neurales",
+        "void_state": "Estado_Vacío"
+    }
+}

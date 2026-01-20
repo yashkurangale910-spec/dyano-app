@@ -4,34 +4,36 @@ import OpenAI from 'openai';
 let quizRouter = Router()
 
 quizRouter.post("/", async (req, response) => {
-  const quiz = req.body.prompt
-  console.log(quiz)
-  const openaiPrompt = new OpenAI({
+  const prompt = req.body.prompt
+
+  const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  async function main() {
-    const completion = await openaiPrompt.chat.completions.create({
-      messages: [{ role: 'user', content: quiz }],
-      model: 'gpt-3.5-turbo',
+  try {
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a quiz generator. Return only a JSON array of objects. Each object must have: "question" (string), "options" (array of 4 strings), and "correctAnswer" (integer index 0-3).'
+        },
+        { role: 'user', content: `Generate a quiz about: ${prompt}` }
+      ],
+      model: 'gpt-3.5-turbo-0125',
+      response_format: { type: "json_object" }
     });
 
-    let main = completion.choices[0].message.content
-    console.log(main)
-    let questions = [];
-    let ans = [];
+    let content = completion.choices[0].message.content;
+    const quizData = JSON.parse(content);
 
-    main = main.split("\n")
-    console.log(main)
-    for (let i = 3; i <= 7; i++)
-      questions.push(main[i].substring(3));
-    for (let i = 10; i <= 14; i++)
-      ans.push(main[i].substring(3));
-    response.json({ questions: questions, answers: ans })
+    // Some models might wrap it in a "quiz" or "questions" key
+    const questions = quizData.questions || quizData.quiz || quizData;
+
+    response.json({ quiz: Array.isArray(questions) ? questions : [questions] });
+  } catch (error) {
+    console.error("Quiz generation error:", error);
+    response.status(500).json({ error: "Failed to generate quiz" });
   }
+});
 
-  main()
-
-})
-
-export default quizRouter
+export default quizRouter;
