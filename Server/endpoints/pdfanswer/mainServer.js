@@ -1,33 +1,120 @@
 import express from 'express';
 import cors from 'cors';
-import axios from 'axios';
+import { config } from 'dotenv';
 import imageGenerator from './final.js';
-import pdfRouter from "./server.js"
-import path from "node:path"
+import pdfRouter from "./server.js";
+import path from "node:path";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import quizRouter from "./quiz.js"
-import flashcardsRouter from "./flashcards.js"
-import roadmapRouter from "./roadmap.js"
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+import quizRouter from "./quiz.js";
+import flashcardsRouter from "./flashcards.js";
+import roadmapRouter from "./roadmap.js";
 
+// Load environment variables
+config();
+
+const app = express();
+
+// Security: Request size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Security: CORS configuration
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400 // 24 hours
+};
+app.use(cors(corsOptions));
+
+// File path setup
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Static files
 app.use('/img', express.static(path.join(__dirname, 'img')));
-app.get("/", (req, res) => {
-    res.send("<h1>Welcome to Dnyanodaya</h1>")
-})
-app.post('/img', imageGenerator);
-app.use("/pdf", pdfRouter)
-app.use("/quiz", quizRouter)
-app.use("/flashcards", flashcardsRouter)
-app.use("/roadmap", roadmapRouter)
 
-const PORT = 3005;
-app.listen(PORT, () => {
-    console.log(`server is listening on port ${PORT}`)
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
 });
+
+// Root endpoint
+app.get("/", (req, res) => {
+    res.json({
+        message: "Dyano API Server",
+        version: "1.0.0",
+        endpoints: {
+            health: "/health",
+            pdf: "/pdf",
+            quiz: "/quiz",
+            flashcards: "/flashcards",
+            roadmap: "/roadmap",
+            content: "/img"
+        }
+    });
+});
+
+// API Routes
+app.post('/img', imageGenerator);
+app.use("/pdf", pdfRouter);
+app.use("/quiz", quizRouter);
+app.use("/flashcards", flashcardsRouter);
+app.use("/roadmap", roadmapRouter);
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'Not Found',
+        message: `Route ${req.method} ${req.url} not found`,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = process.env.NODE_ENV === 'production'
+        ? 'Internal server error'
+        : err.message;
+
+    res.status(status).json({
+        error: message,
+        timestamp: new Date().toISOString(),
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+// Server configuration
+const PORT = process.env.PORT || 3005;
+const server = app.listen(PORT, () => {
+    console.log(`🚀 Dyano API Server running on port ${PORT}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+});
+
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+    console.log(`\n${signal} received. Starting graceful shutdown...`);
+
+    server.close(() => {
+        console.log('✅ Server closed. Exiting process.');
+        process.exit(0);
+    });
+
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+        console.error('⚠️ Forced shutdown after timeout');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

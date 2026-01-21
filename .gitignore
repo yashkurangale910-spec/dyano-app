@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Uploads & Generated Files
+Server/endpoints/pdfanswer/uploads/*
+!Server/endpoints/pdfanswer/uploads/.gitkeep
+Server/endpoints/pdfanswer/img/*
+!Server/endpoints/pdfanswer/img/.gitkeep
+
+# Vector stores (regenerate as needed)
+*.index
+docstore.json
+
+# OS
+Thumbs.db
+.DS_Store
