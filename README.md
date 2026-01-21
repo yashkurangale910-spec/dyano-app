@@ -1,5 +1,20 @@
 # Dyano - AI-Powered Educational Platform
 
+<div align="center">
+
+![React](https://img.shields.io/badge/React-18.2.0-61dafb?style=for-the-badge&logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-4.4.11-646cff?style=for-the-badge&logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-16+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--3.5-412991?style=for-the-badge&logo=openai&logoColor=white)
+![License](https://img.shields.io/badge/License-Private-red?style=for-the-badge)
+
+[![GitHub Stars](https://img.shields.io/github/stars/yashkurangale910-spec/dyano-app?style=social)](https://github.com/yashkurangale910-spec/dyano-app)
+[![GitHub Forks](https://img.shields.io/github/forks/yashkurangale910-spec/dyano-app?style=social)](https://github.com/yashkurangale910-spec/dyano-app/fork)
+
+</div>
+
+---
+
 A comprehensive React-based educational platform with interactive learning modules, AI-powered content generation, quizzes, flashcards, roadmaps, and PDF processing capabilities.
 
 ## 🌟 Features
