@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create axios instance with default config
-const api = axios.create({
+const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3005',
     timeout: 30000,
     headers: {
@@ -9,11 +9,11 @@ const api = axios.create({
     },
 });
 
-// Request interceptor
-api.interceptors.request.use(
+// Request interceptor - Add auth token to requests
+apiClient.interceptors.request.use(
     (config) => {
-        // Add auth token if available
-        const token = localStorage.getItem('auth_token');
+        // Get token from localStorage (authService will manage this)
+        const token = localStorage.getItem('accessToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -24,18 +24,53 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor
-api.interceptors.response.use(
+// Response interceptor - Handle errors and token refresh
+apiClient.interceptors.response.use(
     (response) => response,
-    (error) => {
-        // Handle common errors
+    async (error) => {
+        const originalRequest = error.config;
+
+        // If 401 error and we haven't retried yet, try to refresh token
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // Get refresh token
+                const refreshToken = localStorage.getItem('refreshToken');
+
+                if (!refreshToken) {
+                    // No refresh token, redirect to login
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return Promise.reject(error);
+                }
+
+                // Try to refresh the access token
+                const response = await axios.post(
+                    `${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/auth/refresh`,
+                    { refreshToken }
+                );
+
+                if (response.data.success) {
+                    // Update access token
+                    const newAccessToken = response.data.data.accessToken;
+                    localStorage.setItem('accessToken', newAccessToken);
+
+                    // Retry original request with new token
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return apiClient(originalRequest);
+                }
+            } catch (refreshError) {
+                // Refresh failed, clear auth and redirect to login
+                localStorage.clear();
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
+        // Handle other errors
         if (error.response) {
             switch (error.response.status) {
-                case 401:
-                    // Unauthorized - clear token and redirect to login
-                    localStorage.removeItem('auth_token');
-                    window.location.href = '/login';
-                    break;
                 case 403:
                     console.error('Access forbidden');
                     break;
@@ -46,13 +81,14 @@ api.interceptors.response.use(
                     console.error('Server error');
                     break;
                 default:
-                    console.error('An error occurred');
+                    console.error('An error occurred:', error.response.data?.message || error.message);
             }
         } else if (error.request) {
             console.error('Network error - please check your connection');
         }
+
         return Promise.reject(error);
     }
 );
 
-export default api;
+export default apiClient;

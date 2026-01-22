@@ -3,13 +3,16 @@ import multer from "multer"
 import path from "path"
 import { CharacterTextSplitter } from 'langchain/text_splitter';
 import { config } from 'dotenv';
-config();
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
 import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { OpenAI } from "langchain/llms/openai";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { Router } from "express";
+import PDFDocument from "./models/PDFDocument.js";
+import { authenticateToken } from "./middleware/auth.js";
+
+config();
 const router = Router();
 
 router.use(express.json())
@@ -45,56 +48,115 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
-// Serve HTML form for file upload
-router.get('/', (req, res) => {
-  res.sendFile("/pdfanswer/pdf/index.html")
+/**
+ * Handle PDF upload and initial processing
+ * @route POST /pdf/upload
+ */
+router.post('/upload', authenticateToken, upload.single('pdfFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const userId = req.user.userId;
+    const filePath = req.file.path;
+
+    // Load and split PDF
+    const loader = new PDFLoader(filePath, {
+      parsedItemSeparator: " ",
+    });
+
+    const docs = await loader.load();
+    const extractedText = docs.map(d => d.pageContent).join('\n').substring(0, 5000); // Store sample or full text
+
+    const splitter = new CharacterTextSplitter({
+      chunkSize: 500,
+      chunkOverlap: 100,
+    });
+
+    const documents = await splitter.splitDocuments(docs);
+    const embeddings = new OpenAIEmbeddings();
+
+    // Create a user-specific vector store directory
+    const vectorStorePath = `./vector_stores/${userId}/${req.file.filename}`;
+    const vectorstores = await FaissStore.fromDocuments(documents, embeddings);
+    await vectorstores.save(vectorStorePath);
+
+    // Save metadata to MongoDB
+    const pdfDoc = await PDFDocument.create({
+      user: userId,
+      fileName: req.file.originalname,
+      fileUrl: filePath,
+      fileSize: req.file.size,
+      extractedText: extractedText,
+      status: 'ready',
+      metadata: {
+        pageCount: docs.length
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'File processed successfully!',
+      documentId: pdfDoc._id,
+      vectorStorePath
+    });
+  } catch (error) {
+    console.error("PDF Processing Error:", error);
+    res.status(500).json({ success: false, message: "Failed to process PDF", error: error.message });
+  }
 });
 
-// Handle file upload
-router.post('/upload', upload.single('pdfFile'), async (req, res) => {
-  console.log("hi")
-  const loader = new PDFLoader("./uploads/samplePDF.pdf", {
-    parsedItemSeparator: " ",
-  });
+/**
+ * Ask questions about a specific PDF
+ * @route POST /pdf/question
+ */
+router.post("/question", authenticateToken, async (req, res) => {
+  try {
+    const { question, documentId } = req.body;
+    const userId = req.user.userId;
 
-  const docs = await loader.load();
+    // Find the document to get the vector store path
+    const pdfDoc = await PDFDocument.findOne({ _id: documentId, user: userId });
+    if (!pdfDoc) {
+      return res.status(404).json({ success: false, message: "Document not found" });
+    }
 
-  const splitter = new CharacterTextSplitter({
-    chunkSize: 200,
-    chunkOverlap: 50,
-  });
+    const vectorStorePath = `./vector_stores/${userId}/${path.basename(pdfDoc.fileUrl)}`;
 
-  const documents = await splitter.splitDocuments(docs);
-  const embeddings = new OpenAIEmbeddings();
+    const embeddings = new OpenAIEmbeddings();
+    const vectorstores = await FaissStore.load(vectorStorePath, embeddings);
 
-  const vectorstores = await FaissStore.fromDocuments(documents, embeddings);
-  await vectorstores.save("./");
-  res.send('File uploaded successfully!');
+    const model = new OpenAI({ temperature: 0 });
+
+    const chain = new RetrievalQAChain({
+      combineDocumentsChain: loadQAStuffChain(model),
+      retriever: vectorstores.asRetriever(),
+      returnSourceDocuments: true,
+    });
+
+    const response = await chain.call({
+      query: question
+    });
+
+    res.json({ success: true, data: response.text });
+  } catch (error) {
+    console.error("PDF QA Error:", error);
+    res.status(500).json({ success: false, message: "QA failed", error: error.message });
+  }
 });
 
-router.post("/question", async (req, res) => {
-  console.log(req.body)
-  const { question } = req.body
-
-  const embeddings = new OpenAIEmbeddings();
-  const vectorstores = await FaissStore.load("./", embeddings);
-
-  const model = new OpenAI({ temperature: 0 });
-
-  const chain = new RetrievalQAChain({
-    combineDocumentsChain: loadQAStuffChain(model),
-    retriever: vectorstores.asRetriever(),
-    returnSourceDocuments: true,
-  });
-
-
-  const response = await chain.call({
-    query: question
-  });
-
-  res.json({ data: response.text })
-
-})
+/**
+ * Get all PDFs for user
+ * @route GET /pdfList
+ */
+router.get("/list", authenticateToken, async (req, res) => {
+  try {
+    const documents = await PDFDocument.find({ user: req.user.userId }).sort({ createdAt: -1 });
+    res.json({ success: true, documents });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch document list", error: error.message });
+  }
+});
 
 export default router;
-

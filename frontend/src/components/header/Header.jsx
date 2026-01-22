@@ -1,11 +1,19 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const Header = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const { user, isAuthenticated, logout } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
 
     const changeLanguage = (lng) => {
         i18n.changeLanguage(lng);
@@ -80,16 +88,31 @@ export const Header = () => {
                             </svg>
                         </div>
 
-                        {/* CTA Button */}
-                        <Link
-                            to="/learn"
-                            className="btn btn-primary"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            Start Learning
-                        </Link>
+                        {/* Auth Section */}
+                        {isAuthenticated && user ? (
+                            <div className="flex items-center gap-3">
+                                <div className="text-right hidden sm:block">
+                                    <div className="text-sm font-semibold text-white">{user.name}</div>
+                                    <div className="text-xs text-white/40">{user.email}</div>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-semibold text-sm transition-all border border-red-500/20"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="btn btn-primary"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                                Login
+                            </Link>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -142,13 +165,36 @@ export const Header = () => {
                                 <option value="hi" className="bg-gray-900">🇮🇳 हिंदी</option>
                                 <option value="es" className="bg-gray-900">🇪🇸 Español</option>
                             </select>
-                            <Link
-                                to="/learn"
-                                className="btn btn-primary w-full justify-center"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Start Learning
-                            </Link>
+                            {isAuthenticated && user ? (
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
+                                            {user.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div className="text-white font-semibold">{user.name}</div>
+                                            <div className="text-white/40 text-xs">{user.email}</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            handleLogout();
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        className="w-full py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-semibold text-sm transition-all border border-red-500/20"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="btn btn-primary w-full justify-center"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Login
+                                </Link>
+                            )}
                         </div>
                     </div>
                 )}

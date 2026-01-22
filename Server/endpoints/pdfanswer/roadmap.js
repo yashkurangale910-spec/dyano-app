@@ -1,11 +1,17 @@
 import { Router } from 'express';
 import OpenAI from 'openai';
+import Roadmap from './models/Roadmap.js';
+import { authenticateToken } from './middleware/auth.js';
 
 const roadmapRouter = Router();
 
-roadmapRouter.post("/", async (req, res) => {
+/**
+ * Generate and save a new learning roadmap
+ * @route POST /roadmap
+ */
+roadmapRouter.post("/", authenticateToken, async (req, res) => {
     const { prompt } = req.body;
-    console.log("Roadmap request for:", prompt);
+    const userId = req.user.userId;
 
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
@@ -16,7 +22,7 @@ roadmapRouter.post("/", async (req, res) => {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a master educator. Return ONLY a valid JSON object with exactly two keys: "topic" (string) and "milestones" (array). Each milestone must have "id" (number starting from 1), "title" (string), "description" (string), and "estimatedTime" (string like "2 weeks"). Generate 5-8 milestones.'
+                    content: 'You are a master educator. Return ONLY a valid JSON object with: "title" (string), "goal" (string), and "milestones" (array). Each milestone must have "title" (string), "description" (string), and "order" (number starting from 1).'
                 },
                 {
                     role: 'user',
@@ -28,17 +34,44 @@ roadmapRouter.post("/", async (req, res) => {
         });
 
         const content = JSON.parse(completion.choices[0].message.content);
-        console.log("Roadmap generated:", content);
 
-        // Ensure the response has the required structure
-        if (!content.milestones || !Array.isArray(content.milestones)) {
-            throw new Error("Invalid roadmap structure from AI");
-        }
+        // Save to DB
+        const newRoadmap = await Roadmap.create({
+            user: userId,
+            title: content.title || `Roadmap: ${prompt}`,
+            goal: content.goal || prompt,
+            steps: content.milestones.map(m => ({
+                title: m.title,
+                description: m.description,
+                order: m.order
+            }))
+        });
 
-        res.json(content);
+        res.status(201).json({
+            success: true,
+            message: "Roadmap generated and saved",
+            roadmap: newRoadmap
+        });
     } catch (error) {
-        console.error("Roadmap Error:", error.message);
-        res.status(500).json({ error: "Failed to generate roadmap", details: error.message });
+        console.error("Roadmap Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate roadmap",
+            error: error.message
+        });
+    }
+});
+
+/**
+ * Get all roadmaps for the user
+ * @route GET /roadmap
+ */
+roadmapRouter.get("/", authenticateToken, async (req, res) => {
+    try {
+        const roadmaps = await Roadmap.find({ user: req.user.userId }).sort({ createdAt: -1 });
+        res.json({ success: true, roadmaps });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to fetch roadmaps", error: error.message });
     }
 });
 
