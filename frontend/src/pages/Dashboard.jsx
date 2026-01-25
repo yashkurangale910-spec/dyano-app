@@ -1,179 +1,87 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import LanguageSwitcher from '../components/common/LanguageSwitcher';
-import './Dashboard.css';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
-function Dashboard() {
-    const { t } = useTranslation();
-    const { user, logout } = useAuth();
-    const { isDark, toggleTheme } = useTheme();
-    const [activeTab, setActiveTab] = useState('overview');
+// Components
+import GlassCard from '../components/ui/GlassCard';
+import ParticleButton from '../components/ui/ParticleButton';
+import DashboardStats from '../components/dashboard/DashboardStats';
+import ActivityFeed from '../components/dashboard/ActivityFeed';
 
-    const navItems = [
-        { id: 'overview', label: t('nav.dashboard'), icon: '✨' },
-        { id: 'quizzes', label: t('nav.quiz'), icon: '🎯' },
-        { id: 'flashcards', label: t('nav.flashcards'), icon: '📚' },
-        { id: 'roadmaps', label: t('nav.roadmap'), icon: '🗺️' },
-        { id: 'documents', label: t('nav.pdf'), icon: '📄' },
-    ];
+// Data
+import { DASHBOARD_STATS, LEARNING_TOOLS, RECENT_ACTIVITY } from '../constants/landingContent';
+
+export default function Dashboard() {
+    const navigate = useNavigate();
 
     return (
-        <div className={`dashboard-workspace ${isDark ? 'dark-theme' : 'light-theme'}`}>
-            {/* Immersive Background */}
-            <div className="workspace-bg">
-                <div className="mesh-gradient"></div>
-                <div className="floating-particles">
-                    {[...Array(6)].map((_, i) => (
-                        <div key={i} className={`particle p-${i}`}></div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Sidebar Navigation */}
-            <aside className="workspace-sidebar glass-morphism">
-                <div className="sidebar-brand">
-                    <div className="brand-icon">D</div>
-                    <h1 className="brand-name">Dyano</h1>
-                </div>
-
-                <nav className="sidebar-nav">
-                    {navItems.map((item) => (
-                        <button
-                            key={item.id}
-                            className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-                            onClick={() => setActiveTab(item.id)}
+        <div className="w-full">
+            <main className="py-12">
+                <div className="container-cosmic">
+                    {/* Header */}
+                    <header className="mb-12">
+                        <motion.h1
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="text-5xl font-display font-bold text-gradient-glow mb-2"
                         >
-                            <span className="item-icon">{item.icon}</span>
-                            <span className="item-label">{item.label}</span>
-                            {activeTab === item.id && <span className="active-indicator"></span>}
-                        </button>
-                    ))}
-                </nav>
+                            Mission Control
+                        </motion.h1>
+                        <p className="text-gray-400 font-light tracking-wide">Welcome back, Explorer. Accessing neural stream...</p>
+                    </header>
 
-                <div className="sidebar-footer">
-                    <button className="user-profile glass-button">
-                        <div className="avatar">{user?.name?.charAt(0) || 'U'}</div>
-                        <div className="user-info">
-                            <span className="user-name">{user?.name || 'User'}</span>
-                            <span className="user-role">Student</span>
-                        </div>
-                    </button>
-                    <button className="logout-action" onClick={logout} title="Logout">
-                        🚪
-                    </button>
-                </div>
-            </aside>
+                    <DashboardStats stats={DASHBOARD_STATS} />
 
-            {/* Main Workspace Area */}
-            <main className="workspace-content">
-                <header className="content-top">
-                    <div className="breadcrumb">
-                        <span className="bc-root">Workspace</span>
-                        <span className="bc-divider">/</span>
-                        <span className="bc-current">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</span>
+                    {/* Tools Grid - Using Asymmetric logic here too */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
+                        {LEARNING_TOOLS.map((tool, index) => (
+                            <motion.div
+                                key={tool.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + index * 0.1 }}
+                                className={index === 0 ? "md:col-span-8" : "md:col-span-4"}
+                            >
+                                <GlassCard
+                                    onClick={() => navigate(tool.path)}
+                                    className={`h-full group ${index === 0 ? 'p-8 md:p-12' : 'p-8'}`}
+                                    glow={index === 0}
+                                >
+                                    <div className={`flex ${index === 0 ? 'flex-row' : 'flex-col'} items-start gap-8`}>
+                                        <div className="p-5 rounded-3xl bg-cosmic-purple/10 group-hover:bg-cosmic-purple/20 transition-all duration-500">
+                                            <tool.Icon className="w-10 h-10 text-cosmic-cyan" strokeWidth={1} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className={`font-display font-bold text-white mb-3 ${index === 0 ? 'text-4xl' : 'text-2xl'}`}>
+                                                {tool.title}
+                                            </h3>
+                                            <p className={`text-gray-500 leading-relaxed font-light ${index === 0 ? 'text-lg max-w-md' : 'text-sm'}`}>
+                                                {tool.description}
+                                            </p>
+
+                                            <div className="mt-8 flex gap-4 text-[10px] font-mono tracking-widest uppercase opacity-40">
+                                                {Object.entries(tool.stats).map(([key, value]) => (
+                                                    <div key={key}>
+                                                        {key}: <span className="text-white">{value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </GlassCard>
+                            </motion.div>
+                        ))}
                     </div>
 
-                    <div className="header-actions">
-                        <LanguageSwitcher />
-                        <button className="theme-toggle glass-button" onClick={toggleTheme}>
-                            {isDark ? '☀️' : '🌙'}
-                        </button>
-                        <div className="notification-bell glass-button">🔔<span className="badge"></span></div>
-                    </div>
-                </header>
+                    <ActivityFeed activities={RECENT_ACTIVITY} />
 
-                <div className="workspace-view-container">
-                    {activeTab === 'overview' && (
-                        <div className="overview-view">
-                            <section className="hero-greeting">
-                                <h2 className="greeting-text">
-                                    Good day, <span className="highlight">{user?.name || 'Explorer'}</span>.
-                                </h2>
-                                <p className="sub-text">What shall we master today?</p>
-                            </section>
-
-                            <div className="dashboard-grid">
-                                {/* Primary Actions */}
-                                <div className="primary-actions">
-                                    <div className="action-card feature-glow quiz-glow">
-                                        <div className="card-content">
-                                            <span className="card-tag">Neural Assist</span>
-                                            <h3>Generate Adaptive Quiz</h3>
-                                            <p>Create a test based on your recent activity.</p>
-                                        </div>
-                                        <button className="action-button">Launch AI 🎯</button>
-                                    </div>
-                                    <div className="action-card feature-glow flash-glow">
-                                        <div className="card-content">
-                                            <span className="card-tag">Memory+</span>
-                                            <h3>Active Recall Session</h3>
-                                            <p>Review 15 cards due for repetition.</p>
-                                        </div>
-                                        <button className="action-button">Start Deck 📚</button>
-                                    </div>
-                                </div>
-
-                                {/* Stats & Insights */}
-                                <div className="insights-panel glass-morphism">
-                                    <h3 className="panel-title">Your Progress</h3>
-                                    <div className="stats-list">
-                                        <div className="stat-item">
-                                            <div className="stat-header">
-                                                <span>Daily Goal</span>
-                                                <span className="val">85%</span>
-                                            </div>
-                                            <div className="progress-track"><div className="progress-fill" style={{ width: '85%' }}></div></div>
-                                        </div>
-                                        <div className="stat-item">
-                                            <div className="stat-header">
-                                                <span>Active Streak</span>
-                                                <span className="val">12 Days</span>
-                                            </div>
-                                            <div className="progress-track"><div className="progress-fill streak-gradient" style={{ width: '60%' }}></div></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="recent-activity">
-                                        <h4>Recent Milestones</h4>
-                                        <div className="activity-item">
-                                            <div className="dot"></div>
-                                            <div className="text">Mastered <b>Quantum Mechanics</b> Basics</div>
-                                            <div className="time">2h ago</div>
-                                        </div>
-                                        <div className="activity-item">
-                                            <div className="dot"></div>
-                                            <div className="text">90% Score on <b>React Hooks</b> Quiz</div>
-                                            <div className="time">Yesterday</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Quick Tools */}
-                                <div className="tools-strip">
-                                    <div className="tool-box glass-morphism">
-                                        <span className="icon">📄</span>
-                                        <div className="info">
-                                            <h4>PDF Lab</h4>
-                                            <p>Drop file to scan</p>
-                                        </div>
-                                    </div>
-                                    <div className="tool-box glass-morphism">
-                                        <span className="icon">🗺️</span>
-                                        <div className="info">
-                                            <h4>Pathfinder</h4>
-                                            <p>Plan new roadmap</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Quick Action Bar */}
+                    <footer className="mt-20 flex justify-center border-t border-white/5 pt-12">
+                        <ParticleButton variant="outline" size="sm" onClick={() => navigate('/progress')} className="rounded-none tracking-[0.2em] font-bold text-[10px] uppercase">
+                            Full Archive Access
+                        </ParticleButton>
+                    </footer>
                 </div>
             </main>
         </div>
     );
 }
-
-export default Dashboard;

@@ -6,19 +6,22 @@ export const LANDING_FEATURES = [
         id: 'quiz',
         Icon: Target,
         title: 'AI Quiz Generator',
-        description: 'Generate intelligent quizzes on any topic with adaptive difficulty.'
+        description: 'Generate intelligent quizzes on any topic with adaptive difficulty.',
+        path: '/quiz'
     },
     {
         id: 'flashcards',
         Icon: BookOpen,
         title: 'Smart Flashcards',
-        description: 'Spaced repetition powered by advanced algorithms for optimal retention.'
+        description: 'Spaced repetition powered by advanced algorithms for optimal retention.',
+        path: '/flashcards'
     },
     {
         id: 'roadmap',
         Icon: Map,
         title: 'Learning Roadmaps',
-        description: 'Personalized learning paths that adapt to your progress.'
+        description: 'Personalized learning paths that adapt to your progress.',
+        path: '/roadmap'
     }
 ];
 

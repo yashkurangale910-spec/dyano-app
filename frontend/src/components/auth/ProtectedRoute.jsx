@@ -1,33 +1,13 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import Loading from '../Loading';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-/**
- * Protected Route Component
- * Redirects to login if user is not authenticated
- * Shows loading state while checking authentication
- */
-const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+export default function ProtectedRoute() {
+    const { user } = useAuth();
 
-    // Show loading spinner while checking authentication
-    if (loading) {
-        return (
-            <Loading
-                fullscreen
-                text="Loading..."
-                size="lg"
-            />
-        );
-    }
-
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
+    if (!user) {
+        // Redirect to login if not authenticated
         return <Navigate to="/login" replace />;
     }
 
-    // Render children if authenticated
-    return children;
-};
-
-export default ProtectedRoute;
+    return <Outlet />;
+}
