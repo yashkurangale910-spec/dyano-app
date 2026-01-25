@@ -14,6 +14,10 @@ const quizSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    topicFraming: {
+        type: String,
+        required: false
+    },
     questions: [{
         questionText: {
             type: String,
