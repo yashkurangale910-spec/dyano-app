@@ -1,189 +1,290 @@
-import React, { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ROADMAP_MAP } from '../constants/roadmapData';
-import RoadmapNode from '../components/roadmap/RoadmapNode';
-import RoadmapConnector from '../components/roadmap/RoadmapConnector';
+import { ChevronUp, Plus, Search, Sparkles, Loader2, Compass, Layout, Code, Database, Server, Smartphone, Globe, ArrowRight } from 'lucide-react';
+
+// New Data & Components
+import { roadmapRegistry, getRoadmapsByCategory, getRoadmapById } from '../data/roadmapRegistry';
+import HighFidelityRoadmap from '../components/roadmap/HighFidelityRoadmap';
+import useRoadmaps from '../hooks/useRoadmaps';
+
+// UI
+import GlassCard from '../components/ui/GlassCard';
+import CosmicInput from '../components/ui/CosmicInput';
+import ParticleButton from '../components/ui/ParticleButton';
 
 export default function Roadmap() {
-    const [activeTab, setActiveTab] = useState('frontend');
-    const roadmapData = ROADMAP_MAP[activeTab];
+    const { t } = useTranslation();
+    const [viewMode, setViewMode] = useState('browser'); // browser | viewer | generator
+    const [selectedRoadmapId, setSelectedRoadmapId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [customTopic, setCustomTopic] = useState('');
+    const [activeCategory, setActiveCategory] = useState('Role based'); // Role based | Skill based
 
-    const tabs = [
-        { id: 'frontend', label: 'Frontend' },
-        { id: 'backend', label: 'Backend' },
-    ];
+    // Custom AI Roadmaps
+    const { status, userRoadmaps, generateRoadmap } = useRoadmaps();
+
+    // Browser Data
+    const availableRoadmaps = useMemo(() => {
+        // If there's a search query, search all roadmaps regardless of category
+        if (searchQuery.trim()) {
+            return Object.entries(roadmapRegistry).map(([id, meta]) => ({
+                id,
+                title: meta.data?.title || id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+                category: meta.category,
+                type: meta.type,
+                isNew: meta.isNew
+            })).filter(rm =>
+                rm.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                rm.category.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Otherwise, filter by active category
+        return getRoadmapsByCategory(activeCategory);
+    }, [activeCategory, searchQuery]);
+
+    // Viewer Data
+    const activeRoadmapData = useMemo(() => {
+        if (!selectedRoadmapId) return null;
+        return getRoadmapById(selectedRoadmapId);
+    }, [selectedRoadmapId]);
+
+    // Progress Persistence
+    const [completedNodes, setCompletedNodes] = useState(() => {
+        return new Set(JSON.parse(localStorage.getItem('dyano_roadmap_progress') || '[]'));
+    });
+
+    const handleNodeClick = (node) => {
+        const newSet = new Set(completedNodes);
+        if (newSet.has(node.id)) {
+            newSet.delete(node.id);
+        } else {
+            newSet.add(node.id);
+        }
+        setCompletedNodes(newSet);
+        localStorage.setItem('dyano_roadmap_progress', JSON.stringify([...newSet]));
+    };
+
+    const handleGenerate = async (e) => {
+        e.preventDefault();
+        if (customTopic.trim()) {
+            await generateRoadmap(customTopic);
+            setCustomTopic('');
+            // TODO: Switch to a custom viewer for AI roadmaps (simplified view)
+            alert("AI Roadmap Generated! Check the 'My Knowledge Paths' section.");
+        }
+    };
 
     return (
-        <div className="w-full min-h-screen relative bg-[#000000] py-24 font-sans text-white">
-            {/* Absolute flat background like roadmap.sh */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.05]">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="w-full min-h-screen bg-[#050505] text-white relative overflow-hidden">
+            {/* Background Grid */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:32px_32px]" />
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 relative z-10 flex flex-col items-center">
-                {/* Roadmap Switcher */}
-                <div className="mb-12 flex bg-[#111111] border border-[#262626] p-1 rounded-xl">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-8 py-2.5 rounded-lg text-sm font-black uppercase tracking-widest transition-all duration-200 ${activeTab === tab.id
-                                    ? 'bg-[#ffd60a] text-black shadow-[0_0_20px_rgba(255,214,10,0.2)]'
-                                    : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'
-                                }`}
+            <div className="max-w-7xl mx-auto px-6 py-24 relative z-10">
+
+                {/* Header Navigation */}
+                <header className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-white/5 pb-8 gap-8">
+                    <div>
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex items-center gap-3 mb-2 text-cosmic-cyan"
                         >
-                            {tab.label}
+                            <Compass size={20} />
+                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold">{t('roadmap.header.nav')}</span>
+                        </motion.div>
+                        <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight">
+                            {t('roadmap.header.title_part1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-cosmic-cyan to-cosmic-purple">{t('roadmap.header.title_part2')}</span>
+                        </h1>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => setViewMode('browser')}
+                            className={`px-6 py-3 rounded-xl text-sm font-bold tracking-wide transition-all ${viewMode === 'browser' ? 'bg-white text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                        >
+                            {t('roadmap.tabs.browse')}
                         </button>
-                    ))}
-                </div>
-
-                <header className="mb-24 text-center w-full max-w-3xl px-4">
-                    <motion.div
-                        key={`${activeTab}-phase`}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-block px-3 py-1 bg-[#1a1a1a] text-[#ffd60a] text-[11px] font-bold uppercase rounded-md mb-6 tracking-widest border border-[#262626]"
-                    >
-                        {activeTab === 'frontend' ? 'Frontend Specialist Path' : 'Backend Engineering Path'}
-                    </motion.div>
-
-                    <motion.h1
-                        key={`${activeTab}-title`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-none"
-                    >
-                        {activeTab === 'frontend' ? 'Frontend' : 'Backend'} <span className="text-gray-500">Developer</span>
-                    </motion.h1>
-
-                    <p className="text-gray-500 text-xl font-medium leading-relaxed max-w-2xl mx-auto">
-                        Step by step guide to becoming a modern {activeTab} developer in 2026.
-                    </p>
-
-                    {/* Legend */}
-                    <div className="mt-14 flex flex-wrap justify-center gap-8 py-6 border-y border-[#1a1a1a]">
-                        {[
-                            { label: 'Done', color: 'bg-[#ffd60a]' },
-                            { label: 'In Progress', color: 'border border-[#ffd60a]' },
-                            { label: 'To Do', color: 'bg-[#262626]' },
-                            { label: 'Recommended', color: 'bg-[#ffd60a]', isNode: true },
-                            { label: 'Optional', color: 'bg-[#404040]', isNode: true }
-                        ].map((item) => (
-                            <div key={item.label} className="flex items-center gap-3">
-                                {item.isNode ? (
-                                    <div
-                                        className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-sm border ${item.label === 'Recommended' ? 'border-[#ffd60a] text-white' : 'border-[#404040] text-gray-500'}`}
-                                    >
-                                        {item.label}
-                                    </div>
-                                ) : (
-                                    <div className={`w-3.5 h-3.5 rounded-full ${item.color}`} />
-                                )}
-                                <span className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">{item.label}</span>
-                            </div>
-                        ))}
+                        <button
+                            onClick={() => setViewMode('generator')}
+                            className={`px-6 py-3 rounded-xl text-sm font-bold tracking-wide transition-all ${viewMode === 'generator' ? 'bg-cosmic-cyan text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                        >
+                            {t('roadmap.tabs.architect')}
+                        </button>
                     </div>
                 </header>
 
-                {/* Roadmap Content */}
-                <div className="flex flex-col items-center w-full">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.98 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full flex flex-col items-center"
-                        >
-                            {roadmapData.map((section, sIdx) => {
-                                const hasTopics = section.topics && section.topics.length > 0;
+                {/* VIEW 1: BROWSER */}
+                {viewMode === 'browser' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-8"
+                    >
+                        {/* Filters */}
+                        <div className="flex flex-col md:flex-row gap-6 justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <div className="flex bg-black/40 p-1 rounded-xl">
+                                {[
+                                    { id: 'Role based', key: 'roadmap.filter.role' },
+                                    { id: 'Skill based', key: 'roadmap.filter.skill' },
+                                    { id: 'Frameworks', key: 'roadmap.filter.framework' }
+                                ].map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => setActiveCategory(cat.id)}
+                                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeCategory === cat.id ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        {t(cat.key)}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="w-full md:w-96">
+                                <CosmicInput
+                                    icon={Search}
+                                    placeholder={t('roadmap.search_placeholder')}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
 
-                                if (!hasTopics) return null;
-
-                                return (
-                                    <React.Fragment key={section.id}>
-                                        {/* Milestone Section Header */}
-                                        <div className="w-full flex flex-col items-center">
-                                            <div className="bg-black border-[2.5px] border-[#262626] px-16 py-8 rounded-2xl shadow-2xl relative z-10 hover:border-[#ffd60a] transition-all duration-300">
-                                                <h2 className="text-white font-black text-4xl uppercase tracking-tighter text-center">
-                                                    {section.title}
-                                                </h2>
-                                            </div>
+                        {/* Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {availableRoadmaps.map((roadmap) => (
+                                <GlassCard
+                                    key={roadmap.id}
+                                    onClick={() => {
+                                        setSelectedRoadmapId(roadmap.id);
+                                        setViewMode('viewer');
+                                    }}
+                                    className="p-6 cursor-pointer hover:border-cosmic-cyan/50 group h-full"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className={`p-3 rounded-lg ${roadmap.type === 'role' ? 'bg-cosmic-purple/10 text-cosmic-purple' : 'bg-cosmic-cyan/10 text-cosmic-cyan'}`}>
+                                            {roadmap.type === 'role' ? <Layout size={20} /> : <Code size={20} />}
                                         </div>
-
-                                        {/* Topics Path */}
-                                        <div className="flex flex-col items-center w-full">
-                                            {section.topics.length <= 3 ? (
-                                                // Single Path
-                                                section.topics.map((topic, tIdx) => (
-                                                    <React.Fragment key={topic.id}>
-                                                        <RoadmapConnector status={topic.status} height={60} />
-                                                        <RoadmapNode node={topic} className="w-[420px]" />
-                                                    </React.Fragment>
-                                                ))
-                                            ) : (
-                                                // Branching Path
-                                                <>
-                                                    {section.topics.slice(0, 2).map((topic) => (
-                                                        <React.Fragment key={topic.id}>
-                                                            <RoadmapConnector status={topic.status} height={60} />
-                                                            <RoadmapNode node={topic} className="w-[420px]" />
-                                                        </React.Fragment>
-                                                    ))}
-
-                                                    <RoadmapConnector status={section.status} height={80} />
-
-                                                    <div className="flex flex-wrap justify-center gap-x-24 gap-y-16 w-full relative pt-4">
-                                                        <div className="absolute top-0 left-1/4 right-1/4 h-[4px] bg-[#262626]" />
-
-                                                        {[
-                                                            section.topics.slice(2, Math.ceil(section.topics.length / 2) + 1),
-                                                            section.topics.slice(Math.ceil(section.topics.length / 2) + 1)
-                                                        ].map((group, gIdx) => (
-                                                            <div key={gIdx} className="flex flex-col items-center relative pt-12">
-                                                                <div className="absolute top-0 w-[4px] h-12 bg-[#262626]" />
-                                                                <div className="absolute top-0 w-[11px] h-[11px] rounded-full bg-black border-[3px] border-[#262626]" />
-
-                                                                <div className="flex flex-col items-center w-[320px]">
-                                                                    {group.map((topic, tIdx) => (
-                                                                        <React.Fragment key={topic.id}>
-                                                                            {tIdx > 0 && <RoadmapConnector status={topic.status} height={32} />}
-                                                                            <RoadmapNode node={topic} className="w-full" />
-                                                                        </React.Fragment>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {/* Connector between major sections */}
-                                        {sIdx < roadmapData.length - 1 && (
-                                            <div className="w-full flex flex-col items-center">
-                                                <RoadmapConnector status={roadmapData[sIdx + 1].status === 'locked' ? 'locked' : 'completed'} height={120} />
-                                                <div className="w-5 h-5 rounded-full bg-[#111111] border-[4px] border-[#262626]" />
-                                            </div>
+                                        {roadmap.isNew && (
+                                            <span className="px-2 py-1 bg-cosmic-gold/20 text-cosmic-gold text-[9px] font-bold uppercase rounded border border-cosmic-gold/30">{t('roadmap.card.new')}</span>
                                         )}
-                                    </React.Fragment>
-                                );
-                            })}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cosmic-cyan transition-colors">
+                                        {roadmap.title}
+                                    </h3>
+                                    <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                                        {roadmap.category === 'Role based' ? t('roadmap.filter.role') :
+                                            roadmap.category === 'Skill based' ? t('roadmap.filter.skill') :
+                                                roadmap.category === 'Frameworks' ? t('roadmap.filter.framework') :
+                                                    roadmap.category}
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
-                <footer className="mt-96 pb-40 w-full max-w-3xl border-t border-[#1a1a1a] pt-24 text-center opacity-40">
-                    <div className="flex justify-center gap-1.5 mb-10">
-                        {[...Array(32)].map((_, i) => (
-                            <div key={i} className={`w-1 h-8 ${i % 4 === 0 ? 'bg-[#ffd60a]' : 'bg-[#262626]'}`} />
-                        ))}
-                    </div>
-                    <p className="text-[14px] font-black uppercase tracking-[0.8em] text-white">
-                        Official {activeTab} Curriculum // 2026.01.25
-                    </p>
-                </footer>
+                {/* VIEW 2: VIEWER */}
+                {viewMode === 'viewer' && activeRoadmapData && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-[#0a0a0a] rounded-3xl border border-white/10 overflow-hidden min-h-[80vh] flex flex-col"
+                    >
+                        <div className="border-b border-white/5 p-6 flex justify-between items-center bg-white/[0.02]">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">{activeRoadmapData.title}</h2>
+                                <p className="text-gray-500 text-sm mt-1">{activeRoadmapData.description}</p>
+                            </div>
+                            <button
+                                onClick={() => setViewMode('browser')}
+                                className="px-4 py-2 hover:bg-white/10 rounded-lg text-sm text-gray-400 transition-colors"
+                            >
+                                {t('roadmap.viewer.close')}
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-4 md:p-8 relative bg-grid-pattern">
+                            <div className="w-full max-w-4xl mx-auto flex justify-center">
+                                <HighFidelityRoadmap
+                                    roadmapData={activeRoadmapData}
+                                    completedNodes={completedNodes}
+                                    onNodeClick={handleNodeClick}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t border-white/5 bg-[#0a0a0a] text-center text-xs text-gray-600 uppercase tracking-widest">
+                            {t('roadmap.viewer.progress', { count: completedNodes.size })} // {t('roadmap.viewer.hint')}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* VIEW 3: GENERATOR (Legacy Support) */}
+                {viewMode === 'generator' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-2xl mx-auto text-center py-20"
+                    >
+                        <div className="mb-8 inline-flex p-4 rounded-full bg-cosmic-cyan/10 border border-cosmic-cyan/30 text-cosmic-cyan">
+                            <Sparkles size={32} />
+                        </div>
+                        <h2 className="text-4xl font-bold text-white mb-6">{t('roadmap.generator.title')}</h2>
+                        <p className="text-gray-400 mb-12 text-lg">
+                            {t('roadmap.generator.subtitle')}
+                        </p>
+
+                        <form onSubmit={handleGenerate} className="relative max-w-lg mx-auto mb-16">
+                            <input
+                                type="text"
+                                value={customTopic}
+                                onChange={(e) => setCustomTopic(e.target.value)}
+                                placeholder={t('roadmap.generator.placeholder')}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white focus:border-cosmic-cyan focus:ring-1 focus:ring-cosmic-cyan outline-none transition-all placeholder:text-gray-600"
+                            />
+                            <button
+                                type="submit"
+                                disabled={status === 'generating'}
+                                className="absolute right-2 top-2 bottom-2 aspect-square rounded-xl bg-cosmic-cyan text-black flex items-center justify-center hover:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {status === 'generating' ? <Loader2 className="animate-spin" /> : <Plus />}
+                            </button>
+
+                            {/* Quick Pick Chips */}
+                            <div className="mt-6 flex flex-wrap justify-center gap-3">
+                                <span className="w-full text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">{t('roadmap.generator.quick_pick')}</span>
+                                {['React', 'Next.js', 'Node.js', 'Flutter', 'Django', 'Rust', 'DevOps'].map(tech => (
+                                    <button
+                                        key={tech}
+                                        type="button"
+                                        onClick={() => setCustomTopic(tech)}
+                                        className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-gray-400 hover:bg-cosmic-cyan/20 hover:text-cosmic-cyan hover:border-cosmic-cyan/30 transition-all active:scale-90"
+                                    >
+                                        {tech}
+                                    </button>
+                                ))}
+                            </div>
+                        </form>
+
+                        {/* Recent Generations */}
+                        {userRoadmaps.length > 0 && (
+                            <div className="text-left">
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">{t('roadmap.generator.history')}</h3>
+                                <div className="space-y-4">
+                                    {userRoadmaps.map(rm => (
+                                        <div key={rm._id} className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
+                                            <span className="font-bold text-white">{rm.title}</span>
+                                            <span className="text-xs text-cosmic-cyan px-2 py-1 rounded bg-cosmic-cyan/10">Custom</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
             </div>
         </div>
     );

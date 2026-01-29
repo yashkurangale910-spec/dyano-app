@@ -1,10 +1,22 @@
 import { Router } from 'express';
-import OpenAI from 'openai';
 import FlashcardSet from './models/FlashcardSet.js';
 import { authenticateToken } from './middleware/auth.js';
+import { callGemini } from './utils/gemini.js';
 import { calculateNextReview, getDueCards, getStudyStats } from './utils/spacedRepetition.js';
 
 const flashcardsRouter = Router();
+
+function parseLLMJson(text) {
+    try { return JSON.parse(text); }
+    catch (e) {
+        const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) {
+            try { return JSON.parse(match[1]); }
+            catch (innerE) { throw new Error("Malformed JSON block: " + innerE.message); }
+        }
+        throw e;
+    }
+}
 
 /**
  * Generate and save a new flashcard set
@@ -14,27 +26,21 @@ flashcardsRouter.post("/", authenticateToken, async (req, res) => {
     const { prompt } = req.body;
     const userId = req.user.userId;
 
-    const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    });
-
     try {
-        const completion = await openai.chat.completions.create({
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a study aid generator. Return only a JSON object with a "flashcards" key containing an array of objects. Each object must have "front" (a term or question) and "back" (a concise definition or answer).'
-                },
-                {
-                    role: 'user',
-                    content: `Generate 8-10 flashcards for the following topic/text: ${prompt}`
-                }
-            ],
-            model: 'gpt-3.5-turbo-0125',
+        const responseText = await callGemini([
+            {
+                role: 'system',
+                content: 'You are a study aid generator. Return only a JSON object with a "flashcards" key containing an array of objects. Each object must have "front" (a term or question) and "back" (a concise definition or answer).'
+            },
+            {
+                role: 'user',
+                content: `Generate 8-10 flashcards for the following topic/text: ${prompt}`
+            }
+        ], {
             response_format: { type: "json_object" }
         });
 
-        const content = JSON.parse(completion.choices[0].message.content);
+        const content = parseLLMJson(responseText);
         const cardsList = content.flashcards || content.cards || content;
         const finalCards = Array.isArray(cardsList) ? cardsList : [cardsList];
 

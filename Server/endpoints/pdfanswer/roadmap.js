@@ -1,9 +1,21 @@
 import { Router } from 'express';
-import OpenAI from 'openai';
 import Roadmap from './models/Roadmap.js';
 import { authenticateToken } from './middleware/auth.js';
+import { callGemini } from './utils/gemini.js';
 
 const roadmapRouter = Router();
+
+function parseLLMJson(text) {
+    try { return JSON.parse(text); }
+    catch (e) {
+        const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) {
+            try { return JSON.parse(match[1]); }
+            catch (innerE) { throw new Error("Malformed JSON block: " + innerE.message); }
+        }
+        throw e;
+    }
+}
 
 /**
  * Generate and save a new learning roadmap
@@ -13,27 +25,21 @@ roadmapRouter.post("/", authenticateToken, async (req, res) => {
     const { prompt } = req.body;
     const userId = req.user.userId;
 
-    const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    });
-
     try {
-        const completion = await openai.chat.completions.create({
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a master educator. Return ONLY a valid JSON object with: "title" (string), "goal" (string), and "milestones" (array). Each milestone must have "title" (string), "description" (string), and "order" (number starting from 1).'
-                },
-                {
-                    role: 'user',
-                    content: `Create a comprehensive study roadmap to master: ${prompt}`
-                }
-            ],
-            model: 'gpt-3.5-turbo-0125',
+        const responseText = await callGemini([
+            {
+                role: 'system',
+                content: 'You are a master educator. Return ONLY a valid JSON object with: "title" (string), "goal" (string), and "milestones" (array). Each milestone must have "title" (string), "description" (string), and "order" (number starting from 1).'
+            },
+            {
+                role: 'user',
+                content: `Create a comprehensive study roadmap to master: ${prompt}`
+            }
+        ], {
             response_format: { type: "json_object" }
         });
 
-        const content = JSON.parse(completion.choices[0].message.content);
+        const content = parseLLMJson(responseText);
 
         // Save to DB
         const newRoadmap = await Roadmap.create({

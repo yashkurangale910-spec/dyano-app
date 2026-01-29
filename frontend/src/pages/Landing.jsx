@@ -18,7 +18,7 @@ export default function Landing() {
         <div className="w-full">
             <HeroSection
                 content={HERO_CONTENT}
-                onLaunch={() => navigate('/dashboard')}
+                onLaunch={(topic) => topic ? navigate(`/quiz?topic=${encodeURIComponent(topic)}`) : navigate('/dashboard')}
                 onSignIn={() => navigate('/login')}
             />
 

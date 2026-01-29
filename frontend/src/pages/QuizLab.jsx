@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Cpu, Zap, Info, Search, Send, Sparkles } from 'lucide-react';
 import useQuizzes from '../hooks/useQuizzes';
 import QuizTopicSelector from '../components/quiz/QuizTopicSelector';
@@ -12,8 +12,11 @@ import { QUIZ_TOPICS } from '../constants/landingContent';
 
 export default function QuizLab() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const topicParam = searchParams.get('topic');
+
     const [showReview, setShowReview] = useState(false);
-    const [customTopic, setCustomTopic] = useState('');
+    const [customTopic, setCustomTopic] = useState(topicParam || '');
     const {
         status,
         quizTitle,
@@ -33,6 +36,12 @@ export default function QuizLab() {
     } = useQuizzes();
 
     const [customDifficulty, setCustomDifficulty] = useState('medium');
+
+    useEffect(() => {
+        if (topicParam && status === 'idle') {
+            startQuiz(topicParam, 'medium');
+        }
+    }, [topicParam, status, startQuiz]);
 
     const handleTopicSelect = (topicId) => {
         const topic = QUIZ_TOPICS.find(t => t.id === topicId);
@@ -105,8 +114,8 @@ export default function QuizLab() {
                                                 type="button"
                                                 onClick={() => setCustomDifficulty(level)}
                                                 className={`px-3 py-1 text-[9px] uppercase tracking-widest font-bold border rounded-full transition-all ${customDifficulty === level
-                                                        ? 'bg-cosmic-cyan/10 border-cosmic-cyan text-cosmic-cyan'
-                                                        : 'border-white/5 text-gray-600 hover:border-white/10'
+                                                    ? 'bg-cosmic-cyan/10 border-cosmic-cyan text-cosmic-cyan'
+                                                    : 'border-white/5 text-gray-600 hover:border-white/10'
                                                     }`}
                                             >
                                                 {level}

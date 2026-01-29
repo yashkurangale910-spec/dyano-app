@@ -1,4 +1,4 @@
-import { Target, BookOpen, Map, FileText, Flame, Star, Award, TrendingUp } from 'lucide-react';
+import { Target, BookOpen, Map, FileText, Flame, Star, Award, TrendingUp, Bot } from 'lucide-react';
 
 // LANDING CONTENT
 export const LANDING_FEATURES = [
@@ -82,6 +82,15 @@ export const LEARNING_TOOLS = [
         path: '/pdf',
         color: 'purple',
         stats: { uploaded: 7, analyzed: 7 }
+    },
+    {
+        id: 'chatbot',
+        Icon: Bot,
+        title: 'Spark.E Tutor',
+        description: 'Vision-aware 24/7 tutor for complex queries.',
+        path: '/chatbot',
+        color: 'cyan',
+        stats: { sessions: 0, level: 'Active' }
     },
 ];
 

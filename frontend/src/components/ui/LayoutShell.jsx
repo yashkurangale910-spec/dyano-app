@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import Navigation from './Navigation';
+import CommandPalette from './CommandPalette';
 import KnowledgeUniverse from '../three/KnowledgeUniverse';
 
 export default function LayoutShell() {
@@ -11,6 +12,7 @@ export default function LayoutShell() {
 
     return (
         <div className="cosmic-bg min-h-screen relative overflow-hidden bg-[#05010d]">
+            <CommandPalette />
             {/* 1. PERSISTENT ATMOSPHERIC LAYER (Disciplined Tonal Depth) */}
             <div className="nebula-blob nebula-purple w-[1000px] h-[1000px] -top-[400px] -left-[400px]" />
             <div className="nebula-blob nebula-cyan w-[800px] h-[800px] top-[20%] -right-[200px]" />

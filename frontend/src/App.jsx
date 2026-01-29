@@ -15,6 +15,7 @@ const FlashcardSpace = lazy(() => import('./pages/FlashcardSpace'));
 const PDFLab = lazy(() => import('./pages/PDFLab'));
 const ProgressJourney = lazy(() => import('./pages/ProgressJourney'));
 const Roadmap = lazy(() => import('./pages/Roadmap'));
+const ChatBot = lazy(() => import('./pages/ChatBot'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 
@@ -43,12 +44,15 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
+                {/* All Routes - No Authentication Required */}
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/quiz" element={<QuizLab />} />
                 <Route path="/flashcards" element={<FlashcardSpace />} />
                 <Route path="/pdf" element={<PDFLab />} />
                 <Route path="/progress" element={<ProgressJourney />} />
                 <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/chatbot" element={<ChatBot />} />
               </Route>
             </Routes>
           </Suspense>

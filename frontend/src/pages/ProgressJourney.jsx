@@ -1,10 +1,29 @@
 import { motion } from 'framer-motion';
-import { Award, TrendingUp, Zap, FileText } from 'lucide-react';
+import { Award, TrendingUp, Zap, FileText, Loader2 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import StatPodium from '../components/progress/StatPodium';
-import { RECENT_ACTIVITY } from '../constants/landingContent';
+import useProgress from '../hooks/useProgress';
 
 export default function ProgressJourney() {
+    const { status, progressData, achievements } = useProgress();
+
+    if (status === 'loading' || !progressData) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#05010d]">
+                <Loader2 className="w-12 h-12 text-cosmic-cyan animate-spin mb-4" />
+                <p className="text-gray-500 font-mono tracking-widest uppercase text-xs">Synchronizing Neural Metrics...</p>
+            </div>
+        );
+    }
+
+    const { progress, breakdown } = progressData;
+    const { stats, dailyStreak } = progress;
+
+    // Derived Metrics
+    const totalNodes = stats.totalQuizzesTaken + stats.totalFlashcardsLearned + stats.totalRoadmapsCompleted;
+    const unlockedCount = achievements.filter(a => a.unlocked).length;
+    const velocity = dailyStreak.count > 0 ? `+${dailyStreak.count * 10}%` : '0%';
+
     return (
         <div className="container-cosmic py-24 min-h-screen">
             {/* HERO SECTION: The Expansion Metric */}
@@ -18,16 +37,16 @@ export default function ProgressJourney() {
                     </div>
 
                     <StatPodium
-                        value="84"
+                        value={totalNodes.toString()}
                         label="Neural Connectivity"
-                        subvalue="Syncing with 12 cloud sectors"
+                        subvalue={`Syncing with ${breakdown.quizzes.total} quizzes & ${breakdown.flashcards.sets} decks`}
                         color="cyan"
                     />
                 </div>
 
                 <div className="lg:col-span-4 pb-4">
                     <p className="text-xl text-gray-500 font-light leading-relaxed italic border-l border-white/5 pl-8">
-                        "Your knowledge universe is expanding at a rate of 4.2 sectors per gigacycle. Stability is high."
+                        "Your knowledge universe is expanding. Current average recall efficiency is at {breakdown.quizzes.averageScore}%."
                     </p>
                 </div>
             </section>
@@ -39,52 +58,49 @@ export default function ProgressJourney() {
                         <Award className="text-cosmic-pink" size={32} strokeWidth={1} />
                         <span className="text-[10px] font-mono text-gray-700">ACHIEVEMENT_INDEX</span>
                     </div>
-                    <div className="text-5xl font-display font-bold text-white mb-2">12/30</div>
+                    <div className="text-5xl font-display font-bold text-white mb-2">{unlockedCount}/{achievements.length}</div>
                     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Unlocks Realized</div>
                 </GlassCard>
 
                 <GlassCard className="p-10 border-t-2 border-t-cosmic-purple">
                     <TrendingUp className="text-cosmic-purple mb-8" size={32} strokeWidth={1} />
-                    <div className="text-5xl font-display font-bold text-white mb-2">+12%</div>
+                    <div className="text-5xl font-display font-bold text-white mb-2">{velocity}</div>
                     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Weekly Velocity</div>
                 </GlassCard>
 
                 <GlassCard className="p-10 border-t-2 border-t-cosmic-gold">
                     <Zap className="text-cosmic-gold mb-8" size={32} strokeWidth={1} />
-                    <div className="text-5xl font-display font-bold text-white mb-2">14d</div>
+                    <div className="text-5xl font-display font-bold text-white mb-2">{dailyStreak.count}d</div>
                     <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">System Uptime</div>
                 </GlassCard>
             </div>
 
-            {/* ACTIVITY FEED: System Protocol Style */}
+            {/* ACHIEVEMENTS GRID */}
             <section className="max-w-4xl">
                 <h2 className="text-[11px] uppercase tracking-[0.4em] font-bold text-gray-500 mb-12 flex items-center gap-6">
-                    Recent Transmissions <div className="flex-1 h-[1px] bg-white/5"></div>
+                    Badges & Protocols <div className="flex-1 h-[1px] bg-white/5"></div>
                 </h2>
 
-                <div className="space-y-6">
-                    {RECENT_ACTIVITY.map((activity, idx) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {achievements.map((ach, idx) => (
                         <motion.div
-                            key={activity.id}
+                            key={ach.id}
                             initial={{ opacity: 0, x: -10 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.1 }}
-                            className="flex items-center gap-12 py-6 border-b border-white/5 group"
+                            className={`flex items-center gap-6 p-6 rounded-xl border ${ach.unlocked ? 'border-cosmic-cyan/30 bg-cosmic-cyan/5' : 'border-white/5 bg-white/[0.02] opacity-50'}`}
                         >
-                            <div className="text-[10px] font-mono text-gray-700 w-24">0{idx + 1} // {activity.time}</div>
-                            <div className="flex-1 flex items-center gap-6">
-                                <div className="p-3 bg-white/5 rounded-xl group-hover:bg-cosmic-cyan/10 transition-colors">
-                                    <FileText className="text-gray-600 group-hover:text-cosmic-cyan transition-colors" size={20} strokeWidth={1.5} />
-                                </div>
-                                <div>
-                                    <div className="text-lg font-display text-white group-hover:text-cosmic-cyan transition-colors">{activity.subject}</div>
-                                    <div className="text-xs text-gray-600 uppercase tracking-widest">{activity.action}</div>
-                                </div>
+                            <div className="text-3xl">{ach.icon}</div>
+                            <div>
+                                <div className={`text-lg font-display font-bold ${ach.unlocked ? 'text-white' : 'text-gray-600'}`}>{ach.name}</div>
+                                <div className="text-xs text-gray-500 uppercase tracking-widest">{ach.description}</div>
                             </div>
-                            <div className="text-3xl font-display font-bold text-white italic opacity-20 group-hover:opacity-100 transition-opacity">
-                                {activity.score}
-                            </div>
+                            {ach.unlocked && (
+                                <div className="ml-auto text-cosmic-cyan">
+                                    <Award size={16} />
+                                </div>
+                            )}
                         </motion.div>
                     ))}
                 </div>

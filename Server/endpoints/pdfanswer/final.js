@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { callGemini } from './utils/gemini.js';
 import { writeFileSync } from 'fs';
 import { randomUUID } from 'crypto';
 
@@ -21,30 +21,17 @@ const imageGenerator = async (req, res) => {
       });
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
     // Generate text explanation (await to fix race condition)
-    const textCompletion = await openai.chat.completions.create({
-      messages: [{
-        role: 'user',
-        content: `Explain ${prompt} in 80 words`
-      }],
-      model: 'gpt-3.5-turbo',
+    const explanation = await callGemini([{
+      role: 'user',
+      content: `Explain ${prompt} in 80 words`
+    }], {
+      temperature: 0.7
     });
 
-    const explanation = textCompletion.choices[0].message.content;
-
-    // Generate image
-    const imagePrompt = `Generate a high quality image of ${prompt}`;
-    const imageResult = await openai.images.generate({
-      prompt: imagePrompt,
-      n: 1,
-      size: "512x512" // Increased from 256x256 for better quality
-    });
-
-    const imageUrl = imageResult.data[0].url;
+    // Generate image (Note: Gemini 1.5 Flash doesn't support image generation natively via this API)
+    // We will use a high-quality placeholder for now to prevent the function from crashing
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=512&height=512&seed=42&model=flux`;
 
     // Download and save image
     const imgResponse = await fetch(imageUrl);
