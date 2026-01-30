@@ -1,12 +1,12 @@
-import { Target, BookOpen, Map, FileText, Flame, Star, Award, TrendingUp } from 'lucide-react';
+import { Target, BookOpen, Map, FileText, Flame, Star, Award, TrendingUp, Bot } from 'lucide-react';
 
 // LANDING CONTENT
 export const LANDING_FEATURES = [
     {
         id: 'quiz',
         Icon: Target,
-        title: 'AI Quiz Generator',
-        description: 'Generate intelligent quizzes on any topic with adaptive difficulty.',
+        title: 'Framework-Aware Quizzes',
+        description: 'Take quizzes specialized for your framework (React, Vue, Node) with adaptive difficulty.',
         path: '/quiz'
     },
     {
@@ -34,8 +34,8 @@ export const LANDING_STATS = [
 
 export const HERO_CONTENT = {
     title: 'DYANO',
-    subtitle: 'Navigate the Universe of Knowledge',
-    description: 'AI-powered quizzes, flashcards, and personalized learning paths that adapt to your cosmic journey.',
+    subtitle: 'Your Personal Gateway to Knowledge',
+    description: 'Master any topic with AI-powered quizzes, smart flashcards, and personalized roadmaps. Now in 10+ languages.',
 };
 
 // DASHBOARD CONTENT
@@ -82,6 +82,15 @@ export const LEARNING_TOOLS = [
         path: '/pdf',
         color: 'purple',
         stats: { uploaded: 7, analyzed: 7 }
+    },
+    {
+        id: 'chatbot',
+        Icon: Bot,
+        title: 'Spark.E Tutor',
+        description: 'Vision-aware 24/7 tutor for complex queries.',
+        path: '/chatbot',
+        color: 'cyan',
+        stats: { sessions: 0, level: 'Active' }
     },
 ];
 

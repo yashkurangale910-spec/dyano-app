@@ -237,9 +237,9 @@ export const BACKEND_ROADMAP = [
         status: 'current',
         importance: 'essential',
         topics: [
-            { id: 'terminal-usage', title: 'Terminal Usage', status: 'completed', importance: 'essential' },
-            { id: 'os-internals', title: 'OS Internals', status: 'current', importance: 'essential', subtopics: ['Processes', 'Threads', 'Memory'] },
-            { id: 'posix-basics', title: 'POSIX Basics', status: 'locked', importance: 'recommended' },
+            { id: 'terminal-usage', title: 'Terminal Usage', status: 'completed', importance: 'essential', subtopics: ['Bash/Zsh', 'Vim/Nano', 'SSH'] },
+            { id: 'os-internals', title: 'OS Internals', status: 'current', importance: 'essential', subtopics: ['Process Management', 'Threads & Concurrency', 'Memory Management', 'I/O Management'] },
+            { id: 'posix-basics', title: 'POSIX Basics', status: 'locked', importance: 'recommended', subtopics: ['File Permissions', 'Signals', 'Pipes'] },
         ],
     },
     {
@@ -248,10 +248,10 @@ export const BACKEND_ROADMAP = [
         status: 'locked',
         importance: 'essential',
         topics: [
-            { id: 'javascript-node', title: 'JavaScript (Node.js)', status: 'locked', importance: 'recommended' },
-            { id: 'python', title: 'Python', status: 'locked', importance: 'recommended' },
-            { id: 'go', title: 'Go', status: 'locked', importance: 'recommended' },
-            { id: 'rust', title: 'Rust', status: 'locked', importance: 'optional' },
+            { id: 'javascript-node', title: 'JavaScript (Node.js)', status: 'locked', importance: 'recommended', subtopics: ['Event Loop', 'Package.json', 'Streams'] },
+            { id: 'python', title: 'Python', status: 'locked', importance: 'recommended', subtopics: ['Pip/Poetry', 'Asyncio', 'Decorators'] },
+            { id: 'go', title: 'Go', status: 'locked', importance: 'recommended', subtopics: ['Goroutines', 'Channels', 'Interfaces'] },
+            { id: 'rust', title: 'Rust', status: 'locked', importance: 'optional', subtopics: ['Ownership', 'Borrowing', 'Cargo'] },
             { id: 'java', title: 'Java', status: 'locked', importance: 'optional' },
         ],
     },
@@ -261,9 +261,9 @@ export const BACKEND_ROADMAP = [
         status: 'locked',
         importance: 'essential',
         topics: [
-            { id: 'postgresql', title: 'PostgreSQL', status: 'locked', importance: 'recommended' },
-            { id: 'mysql', title: 'MySQL', status: 'locked', importance: 'essential' },
-            { id: 'sql-basics', title: 'SQL Basics', status: 'locked', importance: 'essential' },
+            { id: 'postgresql', title: 'PostgreSQL', status: 'locked', importance: 'recommended', subtopics: ['JSONB', 'Extensions', 'WAL'] },
+            { id: 'mysql', title: 'MySQL', status: 'locked', importance: 'essential', subtopics: ['Storage Engines', 'Indexing', 'Replication'] },
+            { id: 'sql-basics', title: 'SQL Basics', status: 'locked', importance: 'essential', subtopics: ['Joins', 'Transactions', 'Normalization'] },
         ],
     },
     {
@@ -272,9 +272,9 @@ export const BACKEND_ROADMAP = [
         status: 'locked',
         importance: 'recommended',
         topics: [
-            { id: 'mongodb', title: 'MongoDB', status: 'locked', importance: 'recommended' },
-            { id: 'redis', title: 'Redis', status: 'locked', importance: 'essential' },
-            { id: 'cassandra', title: 'Cassandra', status: 'locked', importance: 'optional' },
+            { id: 'mongodb', title: 'MongoDB', status: 'locked', importance: 'recommended', subtopics: ['Aggregation', 'Sharding', 'BSON'] },
+            { id: 'redis', title: 'Redis', status: 'locked', importance: 'essential', subtopics: ['Data Types', 'Persistence', 'Pub/Sub'] },
+            { id: 'cassandra', title: 'Cassandra', status: 'locked', importance: 'optional', subtopics: ['CQL', 'Gossip Protocol'] },
         ],
     },
     {
