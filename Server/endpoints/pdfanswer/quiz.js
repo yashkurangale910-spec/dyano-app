@@ -1,21 +1,44 @@
 import { Router } from 'express';
-import OpenAI from 'openai';
 import Quiz from './models/Quiz.js';
 import { authenticateToken } from './middleware/auth.js';
+import { callGemini } from './utils/gemini.js';
 
 const quizRouter = Router();
+
+/**
+ * Helper to extract JSON from LLM response
+ */
+function parseLLMJson(text) {
+  try {
+    // If it's already clean JSON
+    return JSON.parse(text);
+  } catch (e) {
+    // Try to find JSON inside markdown blocks
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) {
+      try {
+        return JSON.parse(match[1]);
+      } catch (innerE) {
+        throw new Error("Found JSON block but it's malformed: " + innerE.message);
+      }
+    }
+    throw e;
+  }
+}
 
 /**
  * Generate and save a new quiz
  * @route POST /quiz
  */
 quizRouter.post("/", authenticateToken, async (req, response) => {
-  const { prompt, difficulty = 'medium' } = req.body;
+  const { prompt, difficulty = 'medium', framework = 'General' } = req.body;
   const userId = req.user.userId;
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  console.log(`[Quiz Request] Topic: "${prompt}", Difficulty: ${difficulty}, Framework: "${framework}"`);
+
+  const frameworkContext = (framework && framework !== 'General')
+    ? `\nCONTEXT: The user is studying the "${framework}" ecosystem. Tailor your questions specifically to valid patterns, libraries, and best practices in ${framework}.`
+    : '';
 
   const systemPrompt = `
 # UNIVERSAL TOPIC QUIZ ENGINE
@@ -73,23 +96,21 @@ Return ONLY a JSON object with:
 `;
 
   try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        { role: 'user', content: `Generate a quiz about: "${prompt}". Difficulty: ${difficulty}. Ensure you follow the UNIVERSAL TOPIC QUIZ ENGINE rules strictly.` }
-      ],
-      model: 'gpt-4o',
+    const finalSystemPrompt = systemPrompt + frameworkContext;
+    const finalUserPrompt = `Generate a quiz about: "${prompt}". Difficulty: ${difficulty}. Ensure you follow the UNIVERSAL TOPIC QUIZ ENGINE rules strictly.`;
+
+    const responseText = await callGemini([
+      { role: 'system', content: finalSystemPrompt },
+      { role: 'user', content: finalUserPrompt }
+    ], {
       response_format: { type: "json_object" }
     });
 
-    const content = JSON.parse(completion.choices[0].message.content);
+    const content = parseLLMJson(responseText);
 
     // Extract data from the new structure
-    const title = content.quizTitle || `Quiz about ${prompt}`;
-    const topicFraming = content.topicFraming || '';
+    const title = content.quizTitle || content.title || `Quiz about ${prompt}`;
+    const topicFraming = content.topicFraming || content.description || '';
     const questionsList = content.questions || [];
 
     // Create and save to DB

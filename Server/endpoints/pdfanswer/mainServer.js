@@ -11,6 +11,7 @@ import { dirname } from 'path';
 import quizRouter from "./quiz.js";
 import flashcardsRouter from "./flashcards.js";
 import roadmapRouter from "./roadmap.js";
+import tutorRouter from "./tutor.js";
 import authRouter from "./routes/auth.js";
 import progressRouter from "./routes/progress.js";
 import connectDB from "./config/db.js";
@@ -32,6 +33,12 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 const app = express();
+
+// Basic request logging
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
 
 // Connect to Database (Skip if in test mode)
 if (process.env.NODE_ENV !== 'test') {
@@ -103,6 +110,7 @@ app.use("/pdf", apiLimiter, pdfRouter);
 app.use("/quiz", aiLimiter, quizRouter);
 app.use("/flashcards", aiLimiter, flashcardsRouter);
 app.use("/roadmap", aiLimiter, roadmapRouter);
+app.use("/tutor", aiLimiter, tutorRouter);
 
 // 404 handler
 app.use((req, res) => {

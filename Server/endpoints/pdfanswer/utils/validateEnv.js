@@ -4,7 +4,7 @@
  */
 export const validateEnv = () => {
     const required = [
-        'OPENAI_API_KEY',
+        'GEMINI_API_KEY',
         'JWT_SECRET',
         'MONGODB_URI'
     ];
@@ -23,9 +23,9 @@ export const validateEnv = () => {
         console.warn('⚠️  WARNING: JWT_SECRET should be at least 32 characters for security');
     }
 
-    // Validate OpenAI API key format
-    if (!process.env.OPENAI_API_KEY.startsWith('sk-')) {
-        console.warn('⚠️  WARNING: OPENAI_API_KEY format may be invalid');
+    // Validate Gemini API key format (Google keys usually start with AIza)
+    if (!process.env.GEMINI_API_KEY.startsWith('AIza')) {
+        console.warn('⚠️  WARNING: GEMINI_API_KEY format may be invalid');
     }
 
     console.log('✅ Environment variables validated successfully');

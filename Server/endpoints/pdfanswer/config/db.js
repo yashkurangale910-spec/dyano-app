@@ -19,7 +19,14 @@ const connectDB = async () => {
                 return;
             } catch (err) {
                 console.log('⚠️ Local MongoDB not found. Starting In-Memory MongoDB Server...');
-                const mongod = await MongoMemoryServer.create();
+                const mongod = await MongoMemoryServer.create({
+                    instance: {
+                        dbName: 'dyano'
+                    },
+                    spawnOpts: {
+                        timeout: 60000 // 1 minute timeout for startup
+                    }
+                });
                 uri = mongod.getUri();
             }
         }

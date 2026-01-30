@@ -3,14 +3,11 @@ import multer from "multer"
 import path from "path"
 import { CharacterTextSplitter } from 'langchain/text_splitter';
 import { config } from 'dotenv';
-import { OpenAIEmbeddings } from '@langchain/openai';
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
-import { FaissStore } from '@langchain/community/vectorstores/faiss';
-import { OpenAI } from "langchain/llms/openai";
-import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { Router } from "express";
 import PDFDocument from "./models/PDFDocument.js";
 import { authenticateToken } from "./middleware/auth.js";
+import { callGemini } from "./utils/gemini.js";
 
 config();
 const router = Router();
@@ -75,12 +72,9 @@ router.post('/upload', authenticateToken, upload.single('pdfFile'), async (req, 
     });
 
     const documents = await splitter.splitDocuments(docs);
-    const embeddings = new OpenAIEmbeddings();
 
-    // Create a user-specific vector store directory
-    const vectorStorePath = `./vector_stores/${userId}/${req.file.filename}`;
-    const vectorstores = await FaissStore.fromDocuments(documents, embeddings);
-    await vectorstores.save(vectorStorePath);
+    // Vector stores disabled for now as they require embeddings
+    // We will use extractedText from MongoDB for simple QA
 
     // Save metadata to MongoDB
     const pdfDoc = await PDFDocument.create({
@@ -98,8 +92,7 @@ router.post('/upload', authenticateToken, upload.single('pdfFile'), async (req, 
     res.status(201).json({
       success: true,
       message: 'File processed successfully!',
-      documentId: pdfDoc._id,
-      vectorStorePath
+      documentId: pdfDoc._id
     });
   } catch (error) {
     console.error("PDF Processing Error:", error);
@@ -122,24 +115,17 @@ router.post("/question", authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Document not found" });
     }
 
-    const vectorStorePath = `./vector_stores/${userId}/${path.basename(pdfDoc.fileUrl)}`;
+    // Use extractedText as context
+    const context = pdfDoc.extractedText;
 
-    const embeddings = new OpenAIEmbeddings();
-    const vectorstores = await FaissStore.load(vectorStorePath, embeddings);
+    const messages = [
+      { role: 'system', content: `You are a helpful assistant analyzing a PDF document. Use the following context to answer the user's question accurately.\n\nCONTEXT:\n${context}` },
+      { role: 'user', content: question }
+    ];
 
-    const model = new OpenAI({ temperature: 0 });
+    const aiResponse = await callGemini(messages);
 
-    const chain = new RetrievalQAChain({
-      combineDocumentsChain: loadQAStuffChain(model),
-      retriever: vectorstores.asRetriever(),
-      returnSourceDocuments: true,
-    });
-
-    const response = await chain.call({
-      query: question
-    });
-
-    res.json({ success: true, data: response.text });
+    res.json({ success: true, data: aiResponse });
   } catch (error) {
     console.error("PDF QA Error:", error);
     res.status(500).json({ success: false, message: "QA failed", error: error.message });
