@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Info } from 'lucide-react';
 
-const RoadmapNode = ({ node, className = "" }) => {
+const RoadmapNode = ({ node, className = "", onToggle }) => {
     const isCompleted = node.status === 'completed';
     const isCurrent = node.status === 'current';
     const isLocked = node.status === 'locked';
@@ -39,7 +39,9 @@ const RoadmapNode = ({ node, className = "" }) => {
     return (
         <motion.div
             whileHover={{ scale: 1.015 }}
-            className={`relative group cursor-pointer font-sans ${className}`}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onToggle && onToggle(node.id)}
+            className={`relative group cursor-pointer font-sans select-none ${className}`}
         >
             <div
                 className={`

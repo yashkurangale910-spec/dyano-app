@@ -41,6 +41,12 @@ export default function ParticleButton({
         primary: 'bg-gradient-to-r from-cosmic-purple to-cosmic-pink border-cosmic-pink',
         secondary: 'bg-gradient-to-r from-cosmic-cyan to-cosmic-purple border-cosmic-cyan',
         outline: 'bg-transparent border-cosmic-pink text-cosmic-pink hover:bg-cosmic-pink/10',
+        friendly: 'bg-gradient-to-r from-cosmic-cyan to-cosmic-purple border-cosmic-cyan/30 text-white',
+        strict: 'bg-gradient-to-r from-red-600 to-red-400 border-red-500 text-white',
+        creative: 'bg-gradient-to-r from-cosmic-pink to-cosmic-gold border-cosmic-pink/30 text-black',
+        socratic: 'bg-gradient-to-r from-indigo-600 to-cosmic-cyan border-indigo-400 text-white',
+        professional: 'bg-gradient-to-r from-blue-700 to-blue-500 border-blue-400 text-white',
+        robotic: 'bg-gradient-to-r from-gray-700 to-gray-500 border-white/20 text-cosmic-cyan',
     };
 
     const sizes = {

@@ -14,9 +14,10 @@ export default function GlassCard({
     ...props
 }) {
     const glowClasses = {
-        purple: 'hover:glow-purple',
-        cyan: 'hover:glow-cyan',
-        pink: 'hover:glow-pink',
+        purple: 'hover:shadow-glow-purple border-cosmic-purple/30',
+        cyan: 'hover:shadow-glow-cyan border-cosmic-cyan/30',
+        pink: 'hover:shadow-glow-pink border-cosmic-pink/30',
+        gold: 'hover:shadow-[0_0_30px_rgba(255,214,10,0.3)] border-cosmic-gold/30'
     };
 
     return (
@@ -34,7 +35,9 @@ export default function GlassCard({
             onClick={onClick}
             {...props}
         >
-            {children}
+            <div className="relative z-10 h-full">
+                {children}
+            </div>
         </motion.div>
     );
 }
