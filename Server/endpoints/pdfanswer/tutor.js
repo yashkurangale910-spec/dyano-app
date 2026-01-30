@@ -70,6 +70,7 @@ STRATEGY:
 - Use a formal, objective tone.
 - Perfect for senior university or professional certification students.`,
         style: 'formal and structured'
+<<<<<<< HEAD
     },
     creative: {
         systemPrompt: `You are Spark.E, a Neural Fusion visionary. 
@@ -90,6 +91,8 @@ STRATEGY:
 - Use bullet points for clear data output.
 - Reiterate that you are a machine executing a learning algorithm.`,
         style: 'computational and mechanical'
+=======
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     }
 };
 
@@ -132,6 +135,7 @@ const getLanguageInstruction = (langCode, type = 'general') => {
             general: 'Reply in Marathi (मराठी). Use Devanagari script and proper Marathi grammar.',
             grading: 'Provide all feedback in Marathi (मराठी) using Devanagari script.',
             solving: 'Provide all explanations in Marathi (मराठी) using Devanagari script.'
+<<<<<<< HEAD
         },
         'de': {
             general: 'Reply in German (Deutsch). Use proper German grammar and vocabulary.',
@@ -212,6 +216,8 @@ const getLanguageInstruction = (langCode, type = 'general') => {
             general: 'Reply in Polish (Polski). Use proper Polish grammar and vocabulary.',
             grading: 'Provide all feedback in Polish (Polski).',
             solving: 'Provide all explanations in Polish (Polski).'
+=======
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         }
     };
     const lang = mappings[langCode] || mappings['en'];
@@ -234,12 +240,15 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
     try {
         const { message, personality = 'friendly', depth = 'standard', sessionId, documentId, language = 'en', framework = 'General' } = req.body;
         const userId = req.user?.userId || 'anonymous'; // Allow anonymous users
+<<<<<<< HEAD
 
         // Robustness: Map common synonyms and ensure valid enum values
         const depthMap = { 'beginner': 'brief', 'intermediate': 'standard', 'advanced': 'detailed', 'expert': 'comprehensive' };
         const validatedDepth = depthMap[depth] || (['brief', 'standard', 'detailed', 'comprehensive'].includes(depth) ? depth : 'standard');
         const validatedPersonality = PERSONALITIES[personality] ? personality : 'friendly';
 
+=======
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         const image = req.file;
         const languageInstruction = getLanguageInstruction(language, 'general');
         const frameworkInstruction = getFrameworkInstruction(framework);
@@ -282,12 +291,17 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
                 };
             } else {
                 session = await TutorSession.create({
+<<<<<<< HEAD
                     user: userId, personality: validatedPersonality, depth: validatedDepth, messages: []
+=======
+                    user: userId, personality, depth, messages: []
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                 });
             }
         }
 
         // Build messages array
+<<<<<<< HEAD
         const personalityProfile = PERSONALITIES[personality] || PERSONALITIES.friendly;
         const messages = [
             {
@@ -297,6 +311,14 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
 STRICT LANGUAGE PROTOCOL: 
 ${languageInstruction}
 Do not mix languages. If the user asks in a specific language, stick to it 100%.
+=======
+        const messages = [
+            {
+                role: 'system',
+                content: `${PERSONALITIES[personality].systemPrompt}
+                
+LANGUAGE: ${languageInstruction}
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                 
                 KNOWLEDGE SOURCE: ${context ? "You have access to the student's COURSE MATERIALS. Priority: Use the context below if relevant. \nCONTEXT: " + context : "Use your general knowledge."}
                 
@@ -345,8 +367,32 @@ Do not mix languages. If the user asks in a specific language, stick to it 100%.
                 temperature: personality === 'strict' ? 0.2 : 0.7
             });
         } catch (geminiError) {
+<<<<<<< HEAD
             console.error('❌ Gemini Error:', geminiError.message);
             throw new Error(`Neural sync disrupted: ${geminiError.message}`);
+=======
+            console.error('Gemini Error - Falling back to Local Neural:', geminiError.message);
+
+            // LOCAL LLM FALLBACK (Llama-3.2)
+            try {
+                const { execSync } = await import('child_process');
+                const pythonPath = process.env.PYTHON_PATH || "python";
+                const bridgePath = path.join(process.cwd(), 'local_llm_bridge.py');
+                const cleanMsg = (message || "Analyze this image").replace(/"/g, '\\"');
+
+                const result = execSync(`"${pythonPath}" "${bridgePath}" "${cleanMsg}"`);
+                const parsed = JSON.parse(result.toString());
+
+                if (parsed.success) {
+                    aiResponse = parsed.response + "\n\n*(Note: Spark.E is running in Local Emergency Mode)*";
+                } else {
+                    throw new Error(parsed.error);
+                }
+            } catch (localError) {
+                console.error('Local Fallback failed:', localError.message);
+                throw new Error('Both Neural engines failed');
+            }
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         }
 
         // Save to session

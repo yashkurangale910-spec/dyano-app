@@ -54,6 +54,7 @@ function App() {
                 <Route path="/pdf" element={<PDFLab />} />
                 <Route path="/progress" element={<ProgressJourney />} />
                 <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/chatbot" element={<ChatBot />} />
               </Route>
             </Routes>
           </Suspense>

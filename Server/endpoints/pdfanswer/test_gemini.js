@@ -24,6 +24,7 @@ async function testGemini() {
 }
 
 // Check environment first
+<<<<<<< HEAD
 // Check environment first
 console.log('Checking Server Health...');
 fetch('http://localhost:3005/health')
@@ -31,4 +32,12 @@ fetch('http://localhost:3005/health')
         const h = await r.json();
         console.log('Server Healthy:', h.status || h.message);
         await testGemini();
+=======
+console.log('Checking Server Health...');
+fetch('http://localhost:3005/health')
+    .then(r => r.json())
+    .then(h => {
+        console.log('Server Healthy:', h.status);
+        // We can't easily test /chat without a real JWT, but we can verify the code loads.
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     }).catch(e => console.log('Server unreachable:', e.message));

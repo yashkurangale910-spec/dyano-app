@@ -322,6 +322,7 @@ i18n
             },
             zh: {
                 translation: {
+<<<<<<< HEAD
                     // ... (existing zh translations)
                 }
             },
@@ -331,6 +332,40 @@ i18n
             ta: { translation: { common: { "title": "Spark.E நியூரல் டியூட்டர்" }, nav: { "chatbot": "Spark.E டியூட்டர்" }, tutor: { "processing": "நரம்பியல் செயலாக்கம்..." } } },
             te: { translation: { common: { "title": "Spark.E న్యూరల్ ట్యూటర్" }, nav: { "chatbot": "Spark.E ట్యూటర్" }, tutor: { "processing": "నరాల ప్రాసెసింగ్..." } } },
             bn: { translation: { common: { "title": "Spark.E নিউরাল টিউটর" }, nav: { "chatbot": "Spark.E টিউটর" }, tutor: { "processing": "নিউরন প্রসেসিং..." } } }
+=======
+                    common: { "title": "Spark.E 神经导师", "welcome": "你好！我是 Spark.E，你的通用学习节点。", "placeholder": "向 Spark.E 提问...", "send": "发送", "listen": "语音", "stop_listen": "停止", "mute": "静音", "unmute": "开启声音" },
+                    nav: { "dashboard": "控制面板", "quiz": "测验实验室", "flashcards": "闪卡", "pdf": "PDF 实验室", "chatbot": "Spark.E 导师", "progress": "进度", "roadmap": "路线图" },
+                    dashboard: { "title": "任务控制中心", "welcome": "欢迎回来，{{name}}。正在访问神经流...", "stats": { "uptime": "系统运行时间", "index": "神经指数", "modules": "同步模块", "efficiency": "记忆效率" } },
+                    tutor: {
+                        "tabs": { "chat": "对话", "essay": "评分", "solver": "求解", "status": "状态" },
+                        "mastery": "掌握指数",
+                        "processing": "神经处理中...",
+                        "source": "来源",
+                        "scan_active": "光谱扫描已激活",
+                        "image_ready": "图像已准备好进行分析",
+                        "new_analysis": "新的分析",
+                        "cognitive_perf": "认知表现",
+                        "grade": "评分",
+                        "compliance": "神经合规评分",
+                        "merits": "结构优点",
+                        "errors": "错误簇",
+                        "conclusion": "最终结论",
+                        "essay": { "title": "学术论文扫描", "subtitle": "基于量表的神经评估", "placeholder": "在此粘贴您的文章...", "button": "开始神经评分" },
+                        "solver": { "title": "量子逻辑引擎", "subtitle": "步进式神经推导", "placeholder": "例如：求解 x...", "button": "开始推导" },
+                        "config": { "title": "神经配置", "personality": "人格特征", "depth": "响应深度", "framework_label": "框架专业化", "framework_hint": "针对特定生态系统定制神经响应" }
+                    },
+                    roadmap: {
+                        header: { nav: "神经导航", title_part1: "知识", title_part2: "图谱设计" },
+                        tabs: { browse: "浏览路径", architect: "AI 架构师" },
+                        filter: { role: "基于角色", skill: "基于技能", framework: "框架" },
+                        search_placeholder: "搜索路径 (例如：React, DevOps)...",
+                        card: { new: "新" },
+                        viewer: { close: "关闭地图", progress: "已掌握 {{count}} 个模块", hint: "点击节点以跟踪进度" },
+                        generator: { title: "开启定制知识路径", subtitle: "让我们的神经引擎为你架构定制路径...", placeholder: "例如：量子计算, Rust...", history: "你的生成记录", quick_pick: "快速选择" }
+                    }
+                }
+            }
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         }
     });
 

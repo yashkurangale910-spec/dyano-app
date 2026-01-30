@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, Plus, Search, Sparkles, Loader2, Compass, Layout, Code, Database, Server, Smartphone, Globe, ArrowRight } from 'lucide-react';
+import { ChevronUp, Plus, Search, Sparkles, Loader2, Compass, Layout, Code, Database, Server, Smartphone, Globe, ArrowRight, X, BookOpen } from 'lucide-react';
 
 // New Data & Components
 import { roadmapRegistry, getRoadmapsByCategory, getRoadmapById } from '../data/roadmapRegistry';

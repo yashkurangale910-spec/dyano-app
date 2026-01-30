@@ -54,11 +54,17 @@ export default function useTutor() {
     }, []);
 
     const sendMessage = useCallback(async ({ message, image, personality, depth, sessionId, documentId, language, framework }) => {
+<<<<<<< HEAD
         console.log('🚀 sendMessage triggered', { message, hasImage: !!image });
         setStatus('loading');
 
         const formData = new FormData();
         formData.append('message', message || "");
+=======
+        setStatus('loading');
+        const formData = new FormData();
+        formData.append('message', message);
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         if (image) formData.append('image', image);
         if (personality) formData.append('personality', personality);
         if (depth) formData.append('depth', depth);
@@ -68,6 +74,7 @@ export default function useTutor() {
         if (framework) formData.append('framework', framework);
 
         try {
+<<<<<<< HEAD
             // CRITICAL: DO NOT set 'Content-Type': 'multipart/form-data' manually with Axios + FormData
             // The browser needs to set it automatically to include the boundary string.
             const response = await axios.post(`${API_URL}/tutor/chat`, formData, {
@@ -90,6 +97,22 @@ export default function useTutor() {
             setStatus('error');
             // Ensure status returns to idle after a delay so UI doesn't stay locked if not caught
             setTimeout(() => setStatus('idle'), 3000);
+=======
+            const response = await axios.post(`${API_URL}/tutor/chat`, formData, {
+                headers: {
+                    ...getAuthHeader(),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data.success) {
+                setStatus('idle');
+                return response.data;
+            }
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            setStatus('error');
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
             throw error;
         }
     }, []);

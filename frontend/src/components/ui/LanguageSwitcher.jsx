@@ -51,7 +51,11 @@ export default function LanguageSwitcher() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
+<<<<<<< HEAD
                             className="absolute right-0 top-full mt-3 z-50 min-w-[160px] glass rounded-2xl border border-white/10 p-2 shadow-2xl"
+=======
+                            className="absolute right-0 bottom-full mb-3 z-50 min-w-[160px] glass rounded-2xl border border-white/10 p-2 shadow-2xl"
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                         >
                             <div className="grid grid-cols-1 gap-1">
                                 {LANGUAGES.map((lang) => (
@@ -59,8 +63,13 @@ export default function LanguageSwitcher() {
                                         key={lang.code}
                                         onClick={() => toggleLanguage(lang.code)}
                                         className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${i18n.language === lang.code
+<<<<<<< HEAD
                                             ? 'bg-cosmic-cyan/20 text-cosmic-cyan font-bold'
                                             : 'hover:bg-white/5 text-gray-400 hover:text-white'
+=======
+                                                ? 'bg-cosmic-cyan/20 text-cosmic-cyan font-bold'
+                                                : 'hover:bg-white/5 text-gray-400 hover:text-white'
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">

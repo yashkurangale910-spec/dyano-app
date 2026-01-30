@@ -39,7 +39,6 @@ quizRouter.post("/", authenticateToken, async (req, response) => {
   const frameworkContext = (framework && framework !== 'General')
     ? `\nCONTEXT: The user is studying the "${framework}" ecosystem. Tailor your questions specifically to valid patterns, libraries, and best practices in ${framework}.`
     : '';
-
   const systemPrompt = `
 # UNIVERSAL TOPIC QUIZ ENGINE
 

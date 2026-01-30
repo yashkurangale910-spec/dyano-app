@@ -100,7 +100,7 @@ export default function NexusChat() {
                         <div>
                             <h1 className="text-lg font-bold tracking-tight">NEXUS AI</h1>
                             <div className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
                                 <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Protocol v4.0 Active</span>
                             </div>
                         </div>
@@ -171,8 +171,8 @@ export default function NexusChat() {
                                 className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                             >
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${msg.role === 'user'
-                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                    : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                                     }`}>
                                     {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
                                 </div>

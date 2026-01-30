@@ -16,9 +16,13 @@ import {
     BookOpen,
     Map,
     FileText,
+<<<<<<< HEAD
     Bot,
     Info,
     Rocket
+=======
+    Bot
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 } from 'lucide-react';
 
 import { Canvas } from '@react-three/fiber';
@@ -40,6 +44,7 @@ export default function Dashboard() {
 
     // Derive stats if available
     const stats = (progressData && progressData.progress) ? [
+<<<<<<< HEAD
         { id: 'streak', label: t('dashboard.stats.uptime'), value: `${progressData.progress.dailyStreak?.count || 0} Days`, Icon: Flame, color: 'text-cosmic-gold', glow: 'gold', path: '/progress' },
         { id: 'index', label: t('dashboard.stats.index'), value: (progressData.progress.stats?.averageScore || 0).toString(), Icon: Star, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
         { id: 'modules', label: t('dashboard.stats.modules'), value: ((progressData.progress.stats?.totalQuizzesTaken || 0) + (progressData.progress.stats?.totalRoadmapsCompleted || 0)).toString(), Icon: Award, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
@@ -52,6 +57,18 @@ export default function Dashboard() {
     ];
 
     const hasNoActivity = !progressData || (progressData.progress?.stats?.totalQuizzesTaken === 0 && progressData.progress?.stats?.totalRoadmapsCompleted === 0);
+=======
+        { id: 'streak', label: t('dashboard.stats.uptime'), value: `${progressData.progress.dailyStreak?.count || 0} Days`, Icon: Flame, color: 'text-cosmic-gold', glow: 'gold' },
+        { id: 'index', label: t('dashboard.stats.index'), value: (progressData.progress.stats?.averageScore || 0).toString(), Icon: Star, color: 'text-cosmic-cyan', glow: 'cyan' },
+        { id: 'modules', label: t('dashboard.stats.modules'), value: ((progressData.progress.stats?.totalQuizzesTaken || 0) + (progressData.progress.stats?.totalRoadmapsCompleted || 0)).toString(), Icon: Award, color: 'text-cosmic-pink', glow: 'pink' },
+        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '94%', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple' }
+    ] : [
+        { id: 'streak', label: t('dashboard.stats.uptime'), value: '0 Days', Icon: Flame, color: 'text-cosmic-gold', glow: 'gold' },
+        { id: 'index', label: t('dashboard.stats.index'), value: '0', Icon: Star, color: 'text-cosmic-cyan', glow: 'cyan' },
+        { id: 'modules', label: t('dashboard.stats.modules'), value: '0', Icon: Award, color: 'text-cosmic-pink', glow: 'pink' },
+        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '--', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple' }
+    ];
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 
     return (
         <div className="w-full relative min-h-screen">
@@ -65,6 +82,7 @@ export default function Dashboard() {
             <main className="py-20 relative z-10">
                 <div className="container-cosmic">
                     {/* Header */}
+<<<<<<< HEAD
                     <header className="mb-20">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div>
@@ -96,11 +114,25 @@ export default function Dashboard() {
                                 <div className="text-2xl font-display font-bold text-white/20">v4.2.0-STABLE</div>
                             </div>
                         </div>
+=======
+                    <header className="mb-12">
+                        <motion.h1
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="text-5xl font-display font-bold text-gradient-glow mb-2"
+                        >
+                            {t('dashboard.title')}
+                        </motion.h1>
+                        <p className="text-gray-400 font-light tracking-wide">
+                            {t('dashboard.welcome', { name: user?.name || 'Explorer' })}
+                        </p>
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                     </header>
 
                     {/* Stats Section */}
                     {stats && <DashboardStats stats={stats} />}
 
+<<<<<<< HEAD
                     {/* Onboarding / "Getting Started" Section */}
                     {hasNoActivity && (
                         <motion.div
@@ -224,6 +256,49 @@ export default function Dashboard() {
                                             </div>
                                         </GlassCard>
                                     </Tooltip>
+=======
+                    {/* Tools Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
+                        {LEARNING_TOOLS && LEARNING_TOOLS.map((tool, index) => {
+                            const ToolIcon = tool.Icon || Zap;
+                            return (
+                                <motion.div
+                                    key={tool.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + index * 0.1 }}
+                                    className={index === 0 ? "md:col-span-8" : "md:col-span-4"}
+                                >
+                                    <GlassCard
+                                        onClick={() => navigate(tool.path)}
+                                        className={`h-full group cursor-pointer ${index === 0 ? 'p-8 md:p-12' : 'p-8'}`}
+                                        glow={index === 0}
+                                    >
+                                        <div className={`flex ${index === 0 ? 'flex-row' : 'flex-col'} items-start gap-8`}>
+                                            <div className="p-5 rounded-3xl bg-cosmic-purple/10 group-hover:bg-cosmic-purple/20 transition-all duration-500">
+                                                <ToolIcon className="w-10 h-10 text-cosmic-cyan" strokeWidth={1} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className={`font-display font-bold text-white mb-3 ${index === 0 ? 'text-4xl' : 'text-2xl'}`}>
+                                                    {tool.title}
+                                                </h3>
+                                                <p className={`text-gray-500 leading-relaxed font-light ${index === 0 ? 'text-lg max-w-md' : 'text-sm'}`}>
+                                                    {tool.description}
+                                                </p>
+
+                                                {tool.stats && (
+                                                    <div className="mt-8 flex gap-4 text-[10px] font-mono tracking-widest uppercase opacity-40">
+                                                        {Object.entries(tool.stats).map(([key, value]) => (
+                                                            <div key={key}>
+                                                                {key}: <span className="text-white">{value}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </GlassCard>
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                                 </motion.div>
                             );
                         })}

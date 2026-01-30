@@ -5,7 +5,10 @@ import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import Navigation from './Navigation';
 import CommandPalette from './CommandPalette';
+<<<<<<< HEAD
 import CustomCursor from './CustomCursor';
+=======
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 import KnowledgeUniverse from '../three/KnowledgeUniverse';
 
 export default function LayoutShell() {
@@ -13,7 +16,10 @@ export default function LayoutShell() {
 
     return (
         <div className="cosmic-bg min-h-screen relative overflow-hidden bg-[#05010d]">
+<<<<<<< HEAD
             <CustomCursor />
+=======
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
             <CommandPalette />
             {/* 1. PERSISTENT ATMOSPHERIC LAYER (Disciplined Tonal Depth) */}
             <div className="nebula-blob nebula-purple w-[1000px] h-[1000px] -top-[400px] -left-[400px]" />

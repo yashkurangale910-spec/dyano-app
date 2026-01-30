@@ -1,9 +1,14 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+<<<<<<< HEAD
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Brain, Code, Gauge, ArrowLeft, RefreshCcw } from 'lucide-react';
+=======
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Cpu, Zap, Info, Search, Send, Sparkles } from 'lucide-react';
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 import useQuizzes from '../hooks/useQuizzes';
 
 // Components
@@ -23,8 +28,16 @@ const TOPICS = [
 export default function QuizLab() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+<<<<<<< HEAD
 
     // Core state from useQuizzes hook
+=======
+    const [searchParams] = useSearchParams();
+    const topicParam = searchParams.get('topic');
+
+    const [showReview, setShowReview] = useState(false);
+    const [customTopic, setCustomTopic] = useState(topicParam || '');
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     const {
         status,
         quizTitle,
@@ -45,6 +58,12 @@ export default function QuizLab() {
     const [customTopic, setCustomTopic] = useState('');
     const [customDifficulty, setCustomDifficulty] = useState('medium');
     const [customFramework, setCustomFramework] = useState('General');
+
+    useEffect(() => {
+        if (topicParam && status === 'idle') {
+            startQuiz(topicParam, 'medium');
+        }
+    }, [topicParam, status, startQuiz]);
 
     const handleTopicSelect = (topicId) => {
         const topic = TOPICS.find(t => t.id === topicId);
@@ -78,6 +97,7 @@ export default function QuizLab() {
                         </header>
                     )}
 
+<<<<<<< HEAD
                     <AnimatePresence mode="wait">
                         {/* 1. SELECTION MODE */}
                         {status === 'idle' && (
@@ -92,6 +112,35 @@ export default function QuizLab() {
                                     <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
                                         <Sparkles className="w-4 h-4 text-cosmic-purple" />
                                         <span>Custom Assessment Protocol</span>
+=======
+                        {/* Custom Topic manifest */}
+                        <div className="lg:col-span-5 pb-1">
+                            <form onSubmit={handleCustomSubmit} className="relative group space-y-4">
+                                <CosmicInput
+                                    label="Custom Topic Manifest"
+                                    placeholder="Enter any domain (e.g. Cognitive Psychology, Rust Programming)"
+                                    value={customTopic}
+                                    onChange={(e) => setCustomTopic(e.target.value)}
+                                    icon={Search}
+                                />
+
+                                <div className="flex gap-4 items-center pl-1">
+                                    <div className="text-[10px] uppercase tracking-widest font-bold text-gray-700">Level:</div>
+                                    <div className="flex gap-2">
+                                        {['easy', 'medium', 'hard'].map(level => (
+                                            <button
+                                                key={level}
+                                                type="button"
+                                                onClick={() => setCustomDifficulty(level)}
+                                                className={`px-3 py-1 text-[9px] uppercase tracking-widest font-bold border rounded-full transition-all ${customDifficulty === level
+                                                    ? 'bg-cosmic-cyan/10 border-cosmic-cyan text-cosmic-cyan'
+                                                    : 'border-white/5 text-gray-600 hover:border-white/10'
+                                                    }`}
+                                            >
+                                                {level}
+                                            </button>
+                                        ))}
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                                     </div>
 
                                     <GlassCard className="p-8 md:p-10">

@@ -25,6 +25,7 @@ export default function HeroSection({ content, onLaunch, onSignIn }) {
                         <span className="text-[8px] font-mono text-gray-700 tracking-[0.4em]">v4.2.0_STABLE</span>
                     </motion.div>
 
+<<<<<<< HEAD
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 items-center">
                         <motion.div
                             className="lg:col-span-8"
@@ -113,6 +114,73 @@ export default function HeroSection({ content, onLaunch, onSignIn }) {
                         </motion.div>
                     </div>
                 </div>
+=======
+                    {/* High-Contrast Header */}
+                    <motion.h1
+                        className="text-6xl md:text-8xl lg:text-9xl font-display font-bold text-white mb-8 leading-[0.9] tracking-tighter"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        {content.subtitle.split(' ').map((word, i) => (
+                            <span key={i} className={word === 'Universe' ? 'text-cosmic-cyan' : ''}>
+                                {word}{' '}
+                            </span>
+                        ))}
+                    </motion.h1>
+
+                    <motion.p
+                        className="text-xl md:text-2xl text-gray-500 mb-12 max-w-xl leading-relaxed font-light"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                    >
+                        {content.description}
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="flex flex-col gap-8 items-center sm:items-start"
+                    >
+                        {/* Restore Topic Input */}
+                        <div className="w-full max-w-lg mb-4">
+                            <form onSubmit={(e) => { e.preventDefault(); onLaunch(e.target.topic.value); }} className="relative group">
+                                <input
+                                    name="topic"
+                                    type="text"
+                                    placeholder="Enter topic to Deep Dive (e.g. Quantum Physics)"
+                                    className="w-full bg-white/[0.03] border-b-2 border-white/10 py-5 px-6 text-xl text-white placeholder:text-gray-700 focus:outline-none focus:border-cosmic-cyan transition-all duration-500 rounded-t-xl"
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <ParticleButton type="submit" size="sm" className="rounded-sm px-8 py-3 uppercase tracking-widest text-[10px] font-bold">
+                                        Deep Dive
+                                    </ParticleButton>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-10 items-center sm:items-start">
+                            <button
+                                onClick={() => onLaunch()}
+                                className="group flex items-center gap-4 text-[11px] tracking-[0.3em] font-display font-bold text-white/30 hover:text-white transition-all uppercase"
+                            >
+                                <span className="w-8 h-[1px] bg-white/20 group-hover:w-16 group-hover:bg-cosmic-cyan transition-all duration-500"></span>
+                                Access Mission Control
+                            </button>
+
+                            <button
+                                onClick={onSignIn}
+                                className="group flex items-center gap-4 text-[11px] tracking-[0.3em] font-display font-bold text-white/30 hover:text-white transition-all uppercase"
+                            >
+                                <span className="w-8 h-[1px] bg-white/20 group-hover:w-16 group-hover:bg-cosmic-pink transition-all duration-500"></span>
+                                Synchronize
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+>>>>>>> f37b43085a606618791e2462184fc2d00039b97c
             </div>
         </div>
     );
