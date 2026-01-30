@@ -12,11 +12,14 @@ export default function useQuizzes() {
     const [answers, setAnswers] = useState({});
     const [results, setResults] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
+    const [error, setError] = useState(null);
 
-    const startQuiz = useCallback(async (topic, difficulty) => {
+    const startQuiz = useCallback(async (topic, difficulty, framework = 'General') => {
         setStatus('generating');
+        setError(null);
         try {
-            const pkg = await mockGenerateQuiz(topic, difficulty);
+            // Pass framework as separate arg
+            const pkg = await mockGenerateQuiz(topic, difficulty, framework);
             setQuizPackage(pkg);
             setCurrentIdx(0);
             setAnswers({});
@@ -24,6 +27,7 @@ export default function useQuizzes() {
             setStatus('active');
         } catch (error) {
             console.error("Neural Synthesis Failed:", error);
+            setError(error.message);
             setStatus('idle');
         }
     }, []);

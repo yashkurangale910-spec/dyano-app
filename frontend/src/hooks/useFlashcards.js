@@ -1,40 +1,88 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 
-const MOCK_DECK = [
-    { id: 1, front: "What is Superposition?", back: "A fundamental principle of quantum mechanics where a physical system exists in all its theoretically possible states simultaneously.", level: 'moderate' },
-    { id: 2, front: "What is the 'Transformer' in AI?", back: "A deep learning model that adopts the mechanism of self-attention, differentially weighting the significance of each part of the input data.", level: 'hard' },
-    { id: 3, front: "Define 'Event Horizon'.", back: "The boundary around a black hole beyond which no light or other radiation can escape.", level: 'easy' },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3005';
 
 export default function useFlashcards() {
-    const [deck, setDeck] = useState(MOCK_DECK);
+    const [status, setStatus] = useState('idle'); // idle | loading | generating
+    const [flashcardSets, setFlashcardSets] = useState([]);
+    const [currentSet, setCurrentSet] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
     const [sessionComplete, setSessionComplete] = useState(false);
+
+    const fetchSets = useCallback(async () => {
+        setStatus('loading');
+        try {
+            const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
+            const response = await axios.get(`${API_URL}/flashcards`, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            if (response.data.success) {
+                setFlashcardSets(response.data.flashcardSets);
+                if (response.data.flashcardSets.length > 0 && !currentSet) {
+                    setCurrentSet(response.data.flashcardSets[0]);
+                }
+            }
+            setStatus('idle');
+        } catch (error) {
+            console.error("Failed to fetch flashcards:", error);
+            setStatus('idle');
+        }
+    }, [currentSet]);
+
+    const generateSet = useCallback(async (topic) => {
+        setStatus('generating');
+        try {
+            const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
+            const response = await axios.post(`${API_URL}/flashcards`,
+                { prompt: topic },
+                { headers: { Authorization: `Bearer ${user.token}` } }
+            );
+            if (response.data.success) {
+                setFlashcardSets(prev => [response.data.flashcards, ...prev]);
+                setCurrentSet(response.data.flashcards);
+                setCurrentIndex(0);
+                setStatus('idle');
+                return response.data.flashcards;
+            }
+        } catch (error) {
+            console.error("Failed to generate flashcards:", error);
+            setStatus('idle');
+            throw error;
+        }
+    }, []);
 
     const flip = useCallback(() => setIsFlipped(prev => !prev), []);
 
     const rate = useCallback((grade) => {
         setIsFlipped(false);
-
-        // Wait for flip back before switching
         setTimeout(() => {
-            if (currentIndex < deck.length - 1) {
+            if (currentIndex < (currentSet?.cards?.length || 0) - 1) {
                 setCurrentIndex(prev => prev + 1);
             } else {
                 setSessionComplete(true);
             }
         }, 300);
-    }, [currentIndex, deck.length]);
+    }, [currentIndex, currentSet]);
+
+    useEffect(() => {
+        fetchSets();
+    }, [fetchSets]);
 
     return {
-        currentCard: deck[currentIndex],
+        status,
+        flashcardSets,
+        currentSet,
+        currentCard: currentSet?.cards?.[currentIndex],
         currentIndex,
-        total: deck.length,
+        total: currentSet?.cards?.length || 0,
         isFlipped,
         sessionComplete,
         flip,
         rate,
+        setCurrentSet,
+        generateSet,
         reset: () => {
             setCurrentIndex(0);
             setIsFlipped(false);
@@ -42,3 +90,4 @@ export default function useFlashcards() {
         }
     };
 }
+
