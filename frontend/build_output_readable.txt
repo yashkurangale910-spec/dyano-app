@@ -1,0 +1,71 @@
+﻿
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2933 modules transformed.
+node.exe : 
+[31mΓ£ù[39m Build 
+failed in 20.15s
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([31mΓ£   
+ ù[39m Build fai    
+led in 20.15s:St    
+ring) [], Remote    
+Exception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[31merror during 
+build:
+[31m[vite:terser] 
+terser not found. 
+Since Vite v3, 
+terser has become an 
+optional dependency. 
+You need to install 
+it.[31m
+    at 
+loadTerserPath (file:
+///D:/Games/Implement
+ation/frontend/node_m
+odules/vite/dist/node
+/chunks/config.js:329
+74:8)
+    at 
+Object.renderChunk (f
+ile:///D:/Games/Imple
+mentation/frontend/no
+de_modules/vite/dist/
+node/chunks/config.js
+:33003:39)
+    at 
+Object.handler (file:
+///D:/Games/Implement
+ation/frontend/node_m
+odules/vite/dist/node
+/chunks/config.js:337
+43:13)
+    at file:///D:/Gam
+es/Implementation/fro
+ntend/node_modules/ro
+llup/dist/es/shared/n
+ode-entry.js:22527:40
+    at process.proces
+sTicksAndRejections (
+node:internal/process
+/task_queues:105:5)[
+39m

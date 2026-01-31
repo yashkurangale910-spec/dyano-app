@@ -1,17 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import RoadmapNode from './HighFidelityNode';
+import React, { useState } from 'react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
+import RoadmapNode from './RoadmapNode';
+import RoadmapNodeDetails from './RoadmapNodeDetails';
 
-const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
+const RoadmapVisualization = ({ roadmapData, nodeProgress, onNodeClick }) => {
     const [selectedNode, setSelectedNode] = useState(null);
-    const [inProgressNodes, setInProgressNodes] = useState(new Set());
 
     // Use the coordinates directly from our high-fidelity data
-    const positionedNodes = roadmapData.nodes;
+    const positionedNodes = roadmapData.nodes || [];
 
     const handleNodeClick = (node) => {
         setSelectedNode(node);
-        // Call external handler for modal
+        // Also call parent handler if needed (though we handle display internally now)
         if (onNodeClick) onNodeClick(node);
+    };
+
+    const handleCompleteNode = (nodeId) => {
+        if (onNodeClick) onNodeClick({ id: nodeId }); // Re-use the click handler from parent to toggle completion
     };
 
     // Draw connections between nodes
@@ -23,28 +29,37 @@ const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
                 node.children.forEach((childId) => {
                     const childNode = positionedNodes.find(n => n.id === childId);
                     if (childNode) {
-                        const x1 = node.x;
-                        const y1 = node.y + 25;
-                        const x2 = childNode.x;
-                        const y2 = childNode.y - 25;
+                        // Offset coordinates based on node size (180px width)
+                        const x1 = node.x + 90; // center of node
+                        const y1 = node.y + 80; // bottom of node approx
+                        const x2 = childNode.x + 90;
+                        const y2 = childNode.y - 10; // top of node approx
 
                         // Create a smooth cubic Bezier curve
-                        // The control points are placed vertically between the nodes
                         const midY = (y1 + y2) / 2;
                         const pathData = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
 
                         connections.push(
-                            <path
-                                key={`${node.id}-${childId}`}
-                                d={pathData}
-                                fill="none"
-                                stroke="url(#line-gradient)"
-                                strokeWidth={3}
-                                strokeDasharray="10,5"
-                                markerEnd="url(#arrowhead)"
-                                className="transition-all duration-700 ease-in-out hover:stroke-cosmic-cyan/50"
-                                style={{ strokeDashoffset: 0 }}
-                            />
+                            <g key={`${node.id}-${childId}`}>
+                                {/* Outer glow path */}
+                                <path
+                                    d={pathData}
+                                    fill="none"
+                                    stroke="url(#line-gradient)"
+                                    strokeWidth={4}
+                                    strokeLinecap="round"
+                                    className="opacity-20 blur-[2px]"
+                                />
+                                {/* Main path with animation */}
+                                <path
+                                    d={pathData}
+                                    fill="none"
+                                    stroke="url(#line-gradient)"
+                                    strokeWidth={2}
+                                    strokeDasharray="10,10"
+                                    className="road-line-animation opacity-60"
+                                />
+                            </g>
                         );
                     }
                 });
@@ -55,6 +70,8 @@ const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
     };
 
     // Calculate bounds
+    if (positionedNodes.length === 0) return <div>No nodes to display</div>;
+
     const allX = positionedNodes.map(n => n.x);
     const allY = positionedNodes.map(n => n.y);
     const minX = Math.min(...allX, 0);
@@ -63,10 +80,11 @@ const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
     const maxY = Math.max(...allY, 1000);
 
     // Add padding
-    const padding = 150;
+    const padding = 200;
     const viewWidth = maxX - minX + (padding * 2);
     const viewHeight = maxY - minY + (padding * 2);
-    const viewBox = `${minX - padding} ${minY - padding} ${viewWidth} ${viewHeight}`;
+    const centerX = (minX + maxX) / 2;
+    // const viewBox = `${minX - padding} ${minY - padding} ${viewWidth} ${viewHeight}`;
 
     // Render phase backgrounds
     const renderPhases = () => {
@@ -80,20 +98,17 @@ const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
                     width={viewWidth}
                     height={phase.maxY - phase.minY}
                     fill={phase.color}
-                    rx={20}
-                    opacity={0.3}
-                    stroke="rgba(255,255,255,0.1)"
-                    strokeWidth={1}
+                    rx={40}
+                    opacity={0.05}
                 />
                 <text
-                    x={70}
-                    y={phase.minY + 30}
-                    className="phase-label"
-                    fill="var(--text-secondary)"
-                    fontSize="0.85rem"
-                    fontWeight="700"
+                    x={minX - padding + 50}
+                    y={phase.minY + 60}
+                    fill="rgba(255,255,255,0.2)"
+                    fontSize="4rem"
+                    fontWeight="900"
                     textTransform="uppercase"
-                    letterSpacing="0.05em"
+                    className="font-display select-none pointer-events-none"
                 >
                     {phase.title}
                 </text>
@@ -101,49 +116,104 @@ const RoadmapVisualization = ({ roadmapData, completedNodes, onNodeClick }) => {
         ));
     };
 
-
     return (
-        <div className="roadmap-visualization">
-            <svg width="100%" height="auto" viewBox={viewBox} preserveAspectRatio="xMidYMin meet" className="drop-shadow-2xl">
-                <defs>
-                    <linearGradient id="line-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="var(--cosmic-cyan)" stopOpacity="0.2" />
-                        <stop offset="50%" stopColor="var(--cosmic-purple)" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="var(--cosmic-cyan)" stopOpacity="0.2" />
-                    </linearGradient>
-                    <marker
-                        id="arrowhead"
-                        markerWidth="12"
-                        markerHeight="8"
-                        refX="11"
-                        refY="4"
-                        orient="auto"
-                    >
-                        <polygon points="0 0, 12 4, 0 8" fill="var(--cosmic-cyan)" opacity="0.6" />
-                    </marker>
-                </defs>
-                {renderPhases()}
-                {renderConnections()}
-                {positionedNodes.map((node) => (
-                    <RoadmapNode
-                        key={node.id}
-                        node={node}
-                        onClick={handleNodeClick}
-                        isCompleted={completedNodes.has(node.id)}
-                        isInProgress={inProgressNodes.has(node.id)}
-                    />
-                ))}
-            </svg>
+        <div className="relative w-full h-full min-h-[800px] bg-black/20 overflow-hidden rounded-[2.5rem]">
 
-            {selectedNode && (
-                <div className="node-details">
-                    <h3>{selectedNode.title}</h3>
-                    <p>{selectedNode.description}</p>
-                    <span className={`level-badge ${selectedNode.level}`}>
-                        {selectedNode.level}
-                    </span>
-                </div>
-            )}
+            <TransformWrapper
+                initialScale={1}
+                minScale={0.5}
+                maxScale={2}
+                centerOnInit={true}
+                initialPositionX={0}
+                initialPositionY={0}
+                limitToBounds={false}
+            >
+                {({ zoomIn, zoomOut, resetTransform }) => (
+                    <>
+                        {/* Controls */}
+                        <div className="absolute top-6 right-6 z-30 flex flex-col gap-2">
+                            <button onClick={() => zoomIn()} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-all shadow-lg border border-white/5">
+                                <ZoomIn size={20} />
+                            </button>
+                            <button onClick={() => zoomOut()} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-all shadow-lg border border-white/5">
+                                <ZoomOut size={20} />
+                            </button>
+                            <button onClick={() => resetTransform()} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-all shadow-lg border border-white/5">
+                                <RotateCcw size={20} />
+                            </button>
+                        </div>
+
+                        {/* Global Progress Header (NEW) */}
+                        <div className="absolute top-6 left-6 z-30 flex items-center gap-4 bg-white/10 backdrop-blur-md p-2 pl-4 rounded-xl border border-white/5 shadow-lg">
+                            <div>
+                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Progress</div>
+                                <div className="text-xl font-display font-black text-white leading-none">
+                                    {Math.round((Object.values(nodeProgress).filter(s => s === 'MASTERED').length / Math.max(positionedNodes.length, 1)) * 100)}%
+                                </div>
+                            </div>
+                            <div className="h-10 w-1 bg-white/10 rounded-full" />
+                            <div className="w-24">
+                                <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-cosmic-cyan to-cosmic-purple transition-all duration-1000 ease-out"
+                                        style={{ width: `${(Object.values(nodeProgress).filter(s => s === 'MASTERED').length / Math.max(positionedNodes.length, 1)) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="text-[8px] text-gray-500 mt-1 font-bold text-right">
+                                    {Object.values(nodeProgress).filter(s => s === 'MASTERED').length}/{positionedNodes.length} NODES
+                                </div>
+                            </div>
+                        </div>
+
+                        <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full">
+                            <div style={{ width: viewWidth, height: viewHeight }}>
+                                <svg width={viewWidth} height={viewHeight} viewBox={`${minX - padding} ${minY - padding} ${viewWidth} ${viewHeight}`} className="w-full h-full">
+                                    <defs>
+                                        <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="#06b6d4" />
+                                            <stop offset="100%" stopColor="#8b5cf6" />
+                                        </linearGradient>
+                                        <style>
+                                            {`
+                                            .road-line-animation {
+                                                animation: dash 30s linear infinite;
+                                            }
+                                            @keyframes dash {
+                                                to {
+                                                    stroke-dashoffset: -1000;
+                                                }
+                                            }
+                                        `}
+                                        </style>
+                                    </defs>
+
+                                    {renderPhases()}
+                                    {renderConnections()}
+
+                                </svg>
+                                {/* Render Nodes as HTML divs over the SVG for better interactivity */}
+                                {positionedNodes.map((node) => (
+                                    <RoadmapNode
+                                        key={node.id}
+                                        node={node}
+                                        onClick={handleNodeClick}
+                                        status={nodeProgress[node.id] || 'DEFAULT'}
+                                    />
+                                ))}
+                            </div>
+                        </TransformComponent>
+                    </>
+                )}
+            </TransformWrapper>
+
+            {/* Node Details Slide-over */}
+            <RoadmapNodeDetails
+                node={selectedNode}
+                isOpen={!!selectedNode}
+                onClose={() => setSelectedNode(null)}
+                status={selectedNode ? (nodeProgress[selectedNode.id] || 'DEFAULT') : 'DEFAULT'}
+                onComplete={handleCompleteNode}
+            />
         </div>
     );
 };

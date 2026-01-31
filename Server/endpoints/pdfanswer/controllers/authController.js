@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import User from '../models/User.js';
+import User from '../models/supabase/User.js';
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt.js';
 
 /**
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
             });
         }
 
-        // Create user (password hashing is handled by Mongoose pre-save hook)
+        // Create user (password hashing is handled by Adapter)
         user = await User.create({
             name,
             email,
@@ -80,8 +80,8 @@ export const login = async (req, res) => {
 
         const { email, password } = req.body;
 
-        // Find user and explicitly select password
-        const user = await User.findOne({ email }).select('+password');
+        // Find user (Supabase adapter returns all fields including password hash by default)
+        const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({
                 success: false,

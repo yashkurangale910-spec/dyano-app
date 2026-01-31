@@ -26,14 +26,13 @@
   --font-sans: 'Outfit', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-<<<<<<< HEAD
   /* Mesh Gradients */
   --mesh-gradient:
     radial-gradient(at 0% 0%, rgba(112, 0, 255, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(217, 70, 239, 0.12) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(0, 245, 255, 0.1) 0px, transparent 50%),
     radial-gradient(at 0% 100%, rgba(251, 191, 36, 0.08) 0px, transparent 50%);
-=======
+
   /* Spacing */
   --space-xs: 0.5rem;
   --space-sm: 1rem;
@@ -59,7 +58,6 @@
   --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --border-color: rgba(255, 255, 255, 0.2);
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 }
 
 * {

@@ -1,98 +1,105 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, Lock, Activity, RotateCcw } from 'lucide-react';
 
-const RoadmapNode = ({ node, className = "", onToggle }) => {
-    const isCompleted = node.status === 'completed';
-    const isCurrent = node.status === 'current';
-    const isLocked = node.status === 'locked';
-
-    // roadmap.sh actual tokens based on importance
-    const getTheme = () => {
-        if (isCompleted) return { border: '#ffd60a', bg: '#ffd60a', text: '#000000' };
-
-        switch (node.importance) {
-            case 'essential':
-            case 'recommended':
+const RoadmapNode = ({ node, className = "", onToggle, status = 'DEFAULT', onClick }) => {
+    // Status-based Styles
+    const getStatusStyles = () => {
+        switch (status) {
+            case 'MASTERED':
                 return {
-                    border: '#ffd60a',
-                    bg: isCurrent ? '#111111' : '#111111',
-                    text: isLocked ? '#525252' : '#ffffff'
+                    bg: 'bg-green-500/10',
+                    border: 'border-green-500/40',
+                    glow: 'shadow-[0_0_40px_-5px_rgba(34,197,94,0.4)]',
+                    iconColor: 'text-green-400',
+                    textColor: 'text-white',
+                    icon: <Check size={14} strokeWidth={4} />
                 };
-            case 'optional':
+            case 'LEARNING':
                 return {
-                    border: '#404040',
-                    bg: '#111111',
-                    text: isLocked ? '#525252' : '#888888'
+                    bg: 'bg-cosmic-cyan/10',
+                    border: 'border-cosmic-cyan/40',
+                    glow: 'shadow-[0_0_40px_-5px_rgba(6,182,212,0.4)]',
+                    iconColor: 'text-cosmic-cyan',
+                    textColor: 'text-white',
+                    icon: <Activity size={14} className="animate-pulse" />,
+                    animation: 'animate-pulse'
+                };
+            case 'SKIPPED':
+                return {
+                    bg: 'bg-white/[0.02]',
+                    border: 'border-white/5 border-dashed',
+                    glow: 'opacity-40',
+                    iconColor: 'text-gray-600',
+                    textColor: 'text-gray-500',
+                    icon: <RotateCcw size={14} />
                 };
             default:
                 return {
-                    border: '#262626',
-                    bg: '#111111',
-                    text: isLocked ? '#525252' : '#ffffff'
+                    bg: 'bg-white/[0.03]',
+                    border: 'border-white/10',
+                    glow: '',
+                    iconColor: 'text-gray-400',
+                    textColor: 'text-gray-300',
+                    icon: <Info size={14} />
                 };
         }
     };
 
-    const theme = getTheme();
+    const styles = getStatusStyles();
 
     return (
         <motion.div
-            whileHover={{ scale: 1.015 }}
+            whileHover={{ scale: 1.05, y: -5 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onToggle && onToggle(node.id)}
-            className={`relative group cursor-pointer font-sans select-none ${className}`}
+            onClick={() => onClick ? onClick(node) : (onToggle && onToggle(node.id))}
+            className={`absolute cursor-pointer ${className}`}
+            style={{
+                left: node.x,
+                top: node.y,
+                width: 180, // Fixed width for consistency
+                zIndex: 10
+            }}
         >
-            <div
-                className={`
-          flex items-center gap-4 px-6 py-3.5 rounded-lg border-[2px] transition-all duration-150
-          ${isCurrent ? 'shadow-[0_0_25px_rgba(255,214,10,0.15)]' : ''}
-        `}
-                style={{
-                    borderColor: theme.border,
-                    backgroundColor: theme.bg,
-                }}
-            >
-                <div className="flex-1 min-w-0">
-                    <span
-                        className="text-[15px] font-bold leading-tight truncate block tracking-tight"
-                        style={{ color: theme.text }}
-                    >
-                        {node.title}
-                    </span>
-                    {node.subtopics && (
-                        <div className={`mt-2 flex flex-wrap gap-1.5 ${isCompleted ? 'opacity-40' : 'opacity-60'}`}>
-                            {node.subtopics.map(sub => (
-                                <span key={sub} className="text-[9px] px-1.5 py-0.5 bg-black/20 rounded-sm border border-white/5 whitespace-nowrap">
-                                    {sub}
-                                </span>
-                            ))}
+            {/* Glass Card */}
+            <div className={`
+                relative overflow-hidden
+                backdrop-blur-xl rounded-2xl p-4
+                border transition-all duration-500
+                ${styles.bg} ${styles.border} ${styles.glow}
+                group hover:border-white/30 hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.15)]
+            `}>
+                {/* Gradient Overlay for hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Header / Icon */}
+                <div className="flex justify-between items-start mb-3 relative z-10">
+                    <div className={`p-2 rounded-lg bg-black/40 border border-white/5 ${styles.iconColor} ${styles.animation || ''}`}>
+                        {styles.icon}
+                    </div>
+                    {node.importance === 'essential' && (
+                        <div className="px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/30 text-[8px] font-black tracking-widest text-red-400 uppercase">
+                            Core
                         </div>
                     )}
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    {isCompleted ? (
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center">
-                            <Check size={12} strokeWidth={4} className="text-[#ffd60a]" />
-                        </div>
-                    ) : (
-                        <div className={`w-5 h-5 rounded-full border-[2px] flex items-center justify-center transition-colors ${isLocked ? 'border-[#404040]' : 'border-gray-500 group-hover:border-white'}`}>
-                            <Info
-                                size={10}
-                                strokeWidth={3}
-                                className={`transition-colors ${isLocked ? 'text-[#404040]' : 'text-gray-500 group-hover:text-white'}`}
-                            />
-                        </div>
-                    )}
+                {/* Title */}
+                <h3 className={`text-sm font-bold leading-tight mb-2 relative z-10 transition-colors ${styles.textColor}`}>
+                    {node.title}
+                </h3>
+
+                {/* Subtext */}
+                <div className="flex items-center gap-2 opacity-50 relative z-10">
+                    <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className={`h-full ${status === 'MASTERED' ? 'bg-green-400' : status === 'LEARNING' ? 'bg-cosmic-cyan animate-pulse' : 'bg-gray-600'} w-[${status === 'MASTERED' ? '100%' : status === 'LEARNING' ? '60%' : '10%'}]`} />
+                    </div>
                 </div>
             </div>
 
-            {node.importance === 'essential' && !isCompleted && !isLocked && (
-                <div className="absolute -top-3 right-6 px-2 py-0.5 bg-[#404040] text-gray-200 text-[9px] font-black uppercase rounded-[4px] border border-[#525252] shadow-xl">
-                    Must Know
-                </div>
-            )}
+            {/* Connecting Lines Anchor Points (Invisible) */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-transparent" id={`anchor-top-${node.id}`} />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-transparent" id={`anchor-bottom-${node.id}`} />
         </motion.div>
     );
 };

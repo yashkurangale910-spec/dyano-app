@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import Roadmap from './models/Roadmap.js';
+import Roadmap from './models/supabase/Roadmap.js';
 import { authenticateToken } from './middleware/auth.js';
 import { callGemini } from './utils/gemini.js';
 
@@ -74,7 +74,7 @@ roadmapRouter.post("/", authenticateToken, async (req, res) => {
  */
 roadmapRouter.get("/", authenticateToken, async (req, res) => {
     try {
-        const roadmaps = await Roadmap.find({ user: req.user.userId }).sort({ createdAt: -1 });
+        const roadmaps = await Roadmap.find({ user: req.user.userId }, { createdAt: -1 });
         res.json({ success: true, roadmaps });
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to fetch roadmaps", error: error.message });

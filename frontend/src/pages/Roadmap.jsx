@@ -24,7 +24,7 @@ export default function Roadmap() {
     const [activeCategory, setActiveCategory] = useState('Role based'); // Role based | Skill based
 
     // Custom AI Roadmaps
-    const { status, userRoadmaps, generateRoadmap } = useRoadmaps();
+    const { status, userRoadmaps, generateRoadmap, error } = useRoadmaps();
 
     // Browser Data
     const availableRoadmaps = useMemo(() => {
@@ -46,26 +46,86 @@ export default function Roadmap() {
         return getRoadmapsByCategory(activeCategory);
     }, [activeCategory, searchQuery]);
 
+    // Helper to transform API steps to Viz nodes
+    const transformApiRoadmap = (apiData) => {
+        if (!apiData || !apiData.steps) return apiData;
+
+        // Simple layout generator: Vertical path
+        const nodes = apiData.steps.map((step, index) => {
+            const x = 400; // Centered column
+            const y = 100 + (index * 300); // 300px spacing
+
+            return {
+                id: `step-${index}`, // Ensure unique ID for viz
+                originalId: step._id,
+                title: step.title,
+                description: step.description,
+                phaseId: 'generated-phase',
+                level: 'custom',
+                x: x,
+                y: y,
+                children: index < apiData.steps.length - 1 ? [`step-${index + 1}`] : [], // Connect to next
+                timeEstimate: 'Flexible',
+                resources: [],
+                checklist: []
+            };
+        });
+
+        const maxY = nodes.length * 300 + 400;
+
+        return {
+            ...apiData,
+            nodes,
+            phases: [{
+                id: 'generated-phase',
+                title: 'Custom Learning Path',
+                color: 'rgba(34, 211, 238, 0.05)',
+                minY: 0,
+                maxY: maxY
+            }]
+        };
+    };
+
     // Viewer Data
     const activeRoadmapData = useMemo(() => {
         if (!selectedRoadmapId) return null;
-        return getRoadmapById(selectedRoadmapId);
-    }, [selectedRoadmapId]);
 
-    // Progress Persistence
-    const [completedNodes, setCompletedNodes] = useState(() => {
-        return new Set(JSON.parse(localStorage.getItem('dyano_roadmap_progress') || '[]'));
+        // 1. Check Registry (Static Data)
+        const registryData = getRoadmapById(selectedRoadmapId);
+        if (registryData && registryData.nodes && registryData.nodes.length > 0) {
+            return registryData;
+        }
+
+        // 2. Check User Roadmaps (AI Generated / API)
+        const apiRoadmap = userRoadmaps.find(rm => rm._id === selectedRoadmapId || rm.id === selectedRoadmapId);
+        if (apiRoadmap) {
+            return transformApiRoadmap(apiRoadmap);
+        }
+
+        // 3. Fallback for registry items without data (Coming Soon)
+        if (registryData) return registryData;
+
+        return null;
+    }, [selectedRoadmapId, userRoadmaps]);
+
+    // Progress Persistence (Multi-State)
+    const [nodeProgress, setNodeProgress] = useState(() => {
+        return JSON.parse(localStorage.getItem('dyano_node_progress') || '{}');
     });
 
     const handleNodeClick = (node) => {
-        const newSet = new Set(completedNodes);
-        if (newSet.has(node.id)) {
-            newSet.delete(node.id);
-        } else {
-            newSet.add(node.id);
-        }
-        setCompletedNodes(newSet);
-        localStorage.setItem('dyano_roadmap_progress', JSON.stringify([...newSet]));
+        const states = ['DEFAULT', 'LEARNING', 'MASTERED', 'SKIPPED'];
+        const currentStatus = nodeProgress[node.id] || 'DEFAULT';
+        const nextIndex = (states.indexOf(currentStatus) + 1) % states.length;
+        const nextStatus = states[nextIndex];
+
+        const newProgress = {
+            ...nodeProgress,
+            [node.id]: nextStatus
+        };
+
+        setNodeProgress(newProgress);
+        localStorage.setItem('dyano_node_progress', JSON.stringify(newProgress));
     };
 
     const handleGenerate = async (e) => {
@@ -73,8 +133,9 @@ export default function Roadmap() {
         if (customTopic.trim()) {
             await generateRoadmap(customTopic);
             setCustomTopic('');
-            // TODO: Switch to a custom viewer for AI roadmaps (simplified view)
-            alert("AI Roadmap Generated! Check the 'My Knowledge Paths' section.");
+            // Optionally auto-open the new roadmap:
+            // The hook updates userRoadmaps, but we don't strictly know the new ID here easily without waiting.
+            // For now, just alerting is fine as per previous logic, or we can just let the list update.
         }
     };
 
@@ -123,6 +184,17 @@ export default function Roadmap() {
                     </div>
                 </header>
 
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-red-500/10 border border-red-500/20 text-red-200 px-6 py-4 rounded-xl mb-8 flex items-center gap-3"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-xs font-bold uppercase tracking-widest">{error} - Check Backend Connection</span>
+                    </motion.div>
+                )}
+
                 {/* VIEW 1: BROWSER */}
                 {viewMode === 'browser' && (
                     <motion.div
@@ -143,7 +215,7 @@ export default function Roadmap() {
                                         onClick={() => setActiveCategory(cat.id)}
                                         className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeCategory === cat.id ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
                                     >
-                                        {t(cat.key)}
+                                        {t(cat.key) || cat.id}
                                     </button>
                                 ))}
                             </div>
@@ -247,7 +319,7 @@ export default function Roadmap() {
                             <div className="w-full max-w-5xl mx-auto">
                                 <HighFidelityRoadmap
                                     roadmapData={activeRoadmapData}
-                                    completedNodes={completedNodes}
+                                    nodeProgress={nodeProgress}
                                     onNodeClick={handleNodeClick}
                                 />
                             </div>
@@ -258,7 +330,7 @@ export default function Roadmap() {
                                 <div className="flex -space-x-3">
                                     {[1, 2, 3, 4].map(i => <div key={i} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-md" />)}
                                 </div>
-                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('roadmap.viewer.progress', { count: completedNodes.size })} Synapsed</div>
+                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{Object.values(nodeProgress).filter(s => s === 'MASTERED').length} Mastered</div>
                             </div>
                             <div className="text-[8px] text-gray-700 font-bold uppercase tracking-[0.5em] animate-pulse">
                                 Sensory Feedback Enabled // Neural Link Active
@@ -332,7 +404,14 @@ export default function Roadmap() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {userRoadmaps.map(rm => (
-                                        <GlassCard key={rm._id} className="p-6 flex justify-between items-center group cursor-pointer hover:bg-white/5 transition-all">
+                                        <GlassCard
+                                            key={rm._id || rm.id}
+                                            className="p-6 flex justify-between items-center group cursor-pointer hover:bg-white/5 transition-all"
+                                            onClick={() => {
+                                                setSelectedRoadmapId(rm._id || rm.id);
+                                                setViewMode('viewer');
+                                            }}
+                                        >
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-cosmic-cyan group-hover:bg-cosmic-cyan/10 transition-colors">
                                                     <BookOpen size={18} />

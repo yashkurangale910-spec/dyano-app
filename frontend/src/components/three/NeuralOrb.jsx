@@ -20,12 +20,13 @@ function OrbMesh({ status, personality }) {
 
     useFrame((state) => {
         if (meshRef.current) {
-            meshRef.current.rotation.x = state.clock.elapsedTime * 0.2;
-            meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
+            const speedMultiplier = status === 'loading' ? 4 : 1;
+            meshRef.current.rotation.x = state.clock.elapsedTime * 0.2 * speedMultiplier;
+            meshRef.current.rotation.y = state.clock.elapsedTime * 0.3 * speedMultiplier;
 
             // Pulse effect when loading
             if (status === 'loading') {
-                const s = 1 + Math.sin(state.clock.elapsedTime * 10) * 0.1;
+                const s = 1.1 + Math.sin(state.clock.elapsedTime * 15) * 0.05;
                 meshRef.current.scale.set(s, s, s);
             } else {
                 meshRef.current.scale.set(1, 1, 1);
@@ -34,12 +35,12 @@ function OrbMesh({ status, personality }) {
     });
 
     return (
-        <Float speed={2} rotationIntensity={1} floatIntensity={2}>
+        <Float speed={status === 'loading' ? 10 : 2} rotationIntensity={status === 'loading' ? 2 : 1} floatIntensity={status === 'loading' ? 4 : 2}>
             <Sphere ref={meshRef} args={[1, 64, 64]}>
                 <MeshDistortMaterial
-                    color={activeColor}
-                    speed={status === 'loading' ? 5 : 2}
-                    distort={0.4}
+                    color={status === 'loading' ? '#ffffff' : activeColor}
+                    speed={status === 'loading' ? 10 : 2}
+                    distort={status === 'loading' ? 0.8 : 0.4}
                     radius={1}
                 />
             </Sphere>

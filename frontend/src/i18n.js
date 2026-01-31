@@ -322,17 +322,6 @@ i18n
             },
             zh: {
                 translation: {
-<<<<<<< HEAD
-                    // ... (existing zh translations)
-                }
-            },
-            it: { translation: { common: { "title": "Spark.E Tutor Neurale" }, nav: { "chatbot": "Spark.E Tutor" }, tutor: { "processing": "Elaborazione Neurale..." } } },
-            ko: { translation: { common: { "title": "Spark.E 뉴럴 튜터" }, nav: { "chatbot": "Spark.E 튜터" }, tutor: { "processing": "신경망 처리 중..." } } },
-            ar: { translation: { common: { "title": "Spark.E معلم عصبي" }, nav: { "chatbot": "Spark.E معلم" }, tutor: { "processing": "معالجة عصبية..." } } },
-            ta: { translation: { common: { "title": "Spark.E நியூரல் டியூட்டர்" }, nav: { "chatbot": "Spark.E டியூட்டர்" }, tutor: { "processing": "நரம்பியல் செயலாக்கம்..." } } },
-            te: { translation: { common: { "title": "Spark.E న్యూరల్ ట్యూటర్" }, nav: { "chatbot": "Spark.E ట్యూటర్" }, tutor: { "processing": "నరాల ప్రాసెసింగ్..." } } },
-            bn: { translation: { common: { "title": "Spark.E নিউরাল টিউটর" }, nav: { "chatbot": "Spark.E টিউটর" }, tutor: { "processing": "নিউরন প্রসেসিং..." } } }
-=======
                     common: { "title": "Spark.E 神经导师", "welcome": "你好！我是 Spark.E，你的通用学习节点。", "placeholder": "向 Spark.E 提问...", "send": "发送", "listen": "语音", "stop_listen": "停止", "mute": "静音", "unmute": "开启声音" },
                     nav: { "dashboard": "控制面板", "quiz": "测验实验室", "flashcards": "闪卡", "pdf": "PDF 实验室", "chatbot": "Spark.E 导师", "progress": "进度", "roadmap": "路线图" },
                     dashboard: { "title": "任务控制中心", "welcome": "欢迎回来，{{name}}。正在访问神经流...", "stats": { "uptime": "系统运行时间", "index": "神经指数", "modules": "同步模块", "efficiency": "记忆效率" } },
@@ -364,8 +353,13 @@ i18n
                         generator: { title: "开启定制知识路径", subtitle: "让我们的神经引擎为你架构定制路径...", placeholder: "例如：量子计算, Rust...", history: "你的生成记录", quick_pick: "快速选择" }
                     }
                 }
-            }
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
+            },
+            it: { translation: { common: { "title": "Spark.E Tutor Neurale" }, nav: { "chatbot": "Spark.E Tutor" }, tutor: { "processing": "Elaborazione Neurale..." } } },
+            ko: { translation: { common: { "title": "Spark.E 뉴럴 튜터" }, nav: { "chatbot": "Spark.E 튜터" }, tutor: { "processing": "신경망 처리 중..." } } },
+            ar: { translation: { common: { "title": "Spark.E معلم عصبي" }, nav: { "chatbot": "Spark.E معلم" }, tutor: { "processing": "معالجة عصبية..." } } },
+            ta: { translation: { common: { "title": "Spark.E நியூரல் டியூட்டர்" }, nav: { "chatbot": "Spark.E டியூட்டர்" }, tutor: { "processing": "நரம்பியல் செயலாக்கம்..." } } },
+            te: { translation: { common: { "title": "Spark.E న్యూరల్ ట్యూటర్" }, nav: { "chatbot": "Spark.E ట్యూटर" }, tutor: { "processing": "నరాల ప్రాసెసింగ్..." } } },
+            bn: { translation: { common: { "title": "Spark.E নিউরাল টিউটর" }, nav: { "chatbot": "Spark.E টিউটর" }, tutor: { "processing": "নিউরন প্রসেসিং..." } } }
         }
     });
 

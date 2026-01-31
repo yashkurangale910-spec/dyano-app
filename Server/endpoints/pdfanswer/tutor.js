@@ -7,6 +7,7 @@ import fs from 'fs';
 import os from 'os';
 import TutorSession from './models/TutorSession.js';
 import PDFDocument from './models/PDFDocument.js';
+import { RagService } from './utils/RagService.js';
 
 const router = Router();
 
@@ -70,7 +71,6 @@ STRATEGY:
 - Use a formal, objective tone.
 - Perfect for senior university or professional certification students.`,
         style: 'formal and structured'
-<<<<<<< HEAD
     },
     creative: {
         systemPrompt: `You are Spark.E, a Neural Fusion visionary. 
@@ -91,8 +91,6 @@ STRATEGY:
 - Use bullet points for clear data output.
 - Reiterate that you are a machine executing a learning algorithm.`,
         style: 'computational and mechanical'
-=======
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     }
 };
 
@@ -135,7 +133,6 @@ const getLanguageInstruction = (langCode, type = 'general') => {
             general: 'Reply in Marathi (मराठी). Use Devanagari script and proper Marathi grammar.',
             grading: 'Provide all feedback in Marathi (मराठी) using Devanagari script.',
             solving: 'Provide all explanations in Marathi (मराठी) using Devanagari script.'
-<<<<<<< HEAD
         },
         'de': {
             general: 'Reply in German (Deutsch). Use proper German grammar and vocabulary.',
@@ -216,8 +213,6 @@ const getLanguageInstruction = (langCode, type = 'general') => {
             general: 'Reply in Polish (Polski). Use proper Polish grammar and vocabulary.',
             grading: 'Provide all feedback in Polish (Polski).',
             solving: 'Provide all explanations in Polish (Polski).'
-=======
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         }
     };
     const lang = mappings[langCode] || mappings['en'];
@@ -238,39 +233,32 @@ const getFrameworkInstruction = (framework) => {
  */
 router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
     try {
-        const { message, personality = 'friendly', depth = 'standard', sessionId, documentId, language = 'en', framework = 'General' } = req.body;
-        const userId = req.user?.userId || 'anonymous'; // Allow anonymous users
-<<<<<<< HEAD
+        const { message, personality = 'friendly', depth = 'standard', sessionId, documentId, isDeepContext, language = 'en', framework = 'General' } = req.body;
+        const userId = req.user?.userId || 'anonymous';
 
-        // Robustness: Map common synonyms and ensure valid enum values
-        const depthMap = { 'beginner': 'brief', 'intermediate': 'standard', 'advanced': 'detailed', 'expert': 'comprehensive' };
+        // ... (validation logic)
         const validatedDepth = depthMap[depth] || (['brief', 'standard', 'detailed', 'comprehensive'].includes(depth) ? depth : 'standard');
         const validatedPersonality = PERSONALITIES[personality] ? personality : 'friendly';
 
-=======
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         const image = req.file;
         const languageInstruction = getLanguageInstruction(language, 'general');
         const frameworkInstruction = getFrameworkInstruction(framework);
 
-        if (!message) {
-            return res.status(400).json({ success: false, message: 'Message is required' });
-        }
-
-        // --- RAG: RETRIEVE CONTEXT IF DOCUMENT PROVIDED ---
-        let context = "";
-        if (documentId) {
-            const pdfDoc = await PDFDocument.findOne({ _id: documentId, user: userId });
-            if (pdfDoc) {
-                const vectorStorePath = `./vector_stores/${userId}/${path.basename(pdfDoc.fileUrl)}`;
-                try {
-                    // Temporarily disabled OpenAI Embeddings to prevent crashes
-                    // console.log("RAG Retrieval skipped: OpenAI Key invalid");
-                } catch (ragError) {
-                    console.error("RAG Retrieval skipped:", ragError.message);
+        // --- RAG: RETRIEVE CONTEXT ---
+        let contextData = [];
+        if (documentId && (isDeepContext === 'true' || isDeepContext === true)) {
+            try {
+                const pdfDoc = await PDFDocument.findOne({ _id: documentId });
+                if (pdfDoc) {
+                    const rag = new RagService(userId);
+                    contextData = await rag.retrieve(pdfDoc, message);
                 }
+            } catch (ragError) {
+                console.error("RAG Retrieval Failed:", ragError.message);
             }
         }
+
+        const contextString = contextData.map(c => `[SOURCE: ${c.metadata.source} PAGE: ${c.metadata.page}] ${c.text}`).join('\n\n');
 
         // Get or create session
         let session;
@@ -291,17 +279,12 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
                 };
             } else {
                 session = await TutorSession.create({
-<<<<<<< HEAD
                     user: userId, personality: validatedPersonality, depth: validatedDepth, messages: []
-=======
-                    user: userId, personality, depth, messages: []
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                 });
             }
         }
 
         // Build messages array
-<<<<<<< HEAD
         const personalityProfile = PERSONALITIES[personality] || PERSONALITIES.friendly;
         const messages = [
             {
@@ -311,24 +294,26 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
 STRICT LANGUAGE PROTOCOL: 
 ${languageInstruction}
 Do not mix languages. If the user asks in a specific language, stick to it 100%.
-=======
-        const messages = [
-            {
-                role: 'system',
-                content: `${PERSONALITIES[personality].systemPrompt}
                 
-LANGUAGE: ${languageInstruction}
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
-                
-                KNOWLEDGE SOURCE: ${context ? "You have access to the student's COURSE MATERIALS. Priority: Use the context below if relevant. \nCONTEXT: " + context : "Use your general knowledge."}
+                KNOWLEDGE SOURCE: ${contextString ? "You have access to the student's COURSE MATERIALS. Priority: Use the context below if relevant. \nCONTEXT: " + contextString : "Use your general knowledge."}
                 
                 ${frameworkInstruction}
 
                 DEPTH: ${DEPTH_LEVELS[depth]}
                 
+                OUTPUT FORMAT:
+                You MUST respond in VALID JSON format with the following keys:
+                {
+                    "response": "Your tutoring explanation here...",
+                    "citations": [
+                        { "source": "Filename", "page": "Page number", "snippet": "Text snippet" }
+                    ]
+                }
+                Only include citations if you used the provided COURSE MATERIALS.
+                
                 FORMATTING RULES:
                 - Use LaTeX for ALL mathematical formulas (e.g., $E=mc^2$).
-                - Use clear Markdown headings for structure.
+                - Use clear Markdown headings inside the "response" string.
                 - If the student provides an image, analyze it visually for diagrams, text, or context.`
             },
             ...session.messages.map(msg => ({
@@ -360,51 +345,29 @@ LANGUAGE: ${languageInstruction}
         }
 
         // Get Gemini response (Faster & Free)
-        let aiResponse = "";
+        let aiResult = {};
         try {
-            aiResponse = await callGemini(messages, {
+            const responseText = await callGemini(messages, {
                 max_tokens: depth === 'comprehensive' ? 2000 : depth === 'detailed' ? 1500 : 1000,
-                temperature: personality === 'strict' ? 0.2 : 0.7
+                temperature: personality === 'strict' ? 0.2 : 0.7,
+                response_format: { type: 'json_object' }
             });
+            aiResult = JSON.parse(responseText);
         } catch (geminiError) {
-<<<<<<< HEAD
             console.error('❌ Gemini Error:', geminiError.message);
             throw new Error(`Neural sync disrupted: ${geminiError.message}`);
-=======
-            console.error('Gemini Error - Falling back to Local Neural:', geminiError.message);
-
-            // LOCAL LLM FALLBACK (Llama-3.2)
-            try {
-                const { execSync } = await import('child_process');
-                const pythonPath = process.env.PYTHON_PATH || "python";
-                const bridgePath = path.join(process.cwd(), 'local_llm_bridge.py');
-                const cleanMsg = (message || "Analyze this image").replace(/"/g, '\\"');
-
-                const result = execSync(`"${pythonPath}" "${bridgePath}" "${cleanMsg}"`);
-                const parsed = JSON.parse(result.toString());
-
-                if (parsed.success) {
-                    aiResponse = parsed.response + "\n\n*(Note: Spark.E is running in Local Emergency Mode)*";
-                } else {
-                    throw new Error(parsed.error);
-                }
-            } catch (localError) {
-                console.error('Local Fallback failed:', localError.message);
-                throw new Error('Both Neural engines failed');
-            }
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         }
 
         // Save to session
         session.messages.push(
             { role: 'user', content: message, hasImage: !!image },
-            { role: 'assistant', content: aiResponse }
+            { role: 'assistant', content: aiResult.response, metadata: { citations: aiResult.citations } }
         );
         await session.save();
 
         res.json({
             success: true,
-            response: aiResponse,
+            response: aiResult, // Return the whole object for citations
             sessionId: session._id,
             messageCount: session.messages.length
         });

@@ -9,28 +9,29 @@ const RoadmapConnector = ({
     className = ""
 }) => {
     const isCompleted = status === 'completed';
-    const color = isCompleted ? '#ffd60a' : '#262626';
+    // Use gradient IDs defined in HighFidelityRoadmap
+    const stroke = isCompleted ? '#22c55e' : 'url(#line-gradient)';
+    const opacity = isCompleted ? 0.8 : 0.3;
 
     if (type === 'vertical') {
         return (
             <div className={`flex flex-col items-center flex-shrink-0 relative ${className}`} style={{ height: `${height}px` }}>
-                <div className="w-[3.5px] h-full" style={{ backgroundColor: color }} />
+                <div className="w-[2px] h-full bg-gradient-to-b from-cosmic-cyan/20 to-cosmic-purple/20" />
                 {/* Connection Dot */}
-                <div className="absolute top-0 w-[9px] h-[9px] rounded-full border-[2.5px] -translate-y-1/2"
-                    style={{ backgroundColor: '#111111', borderColor: color }} />
+                <div className="absolute top-0 w-2 h-2 rounded-full border border-white/20 bg-black -translate-y-1/2 shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
             </div>
         );
     }
 
     if (type === 'curve') {
         // direction determines if it branches right or left
-        const strokeWidth = 3.5;
+        const strokeWidth = 2;
         const cornerRadius = 24;
 
         // Exact L-shaped curve with rounded corner
         const d = direction === 'right'
-            ? `M 2 0 L 2 ${height - cornerRadius} Q 2 ${height} ${cornerRadius} ${height} L ${width} ${height}`
-            : `M ${width - 2} 0 L ${width - 2} ${height - cornerRadius} Q ${width - 2} ${height} ${width - cornerRadius} ${height} L 0 ${height}`;
+            ? `M 0 0 L 0 ${height - cornerRadius} Q 0 ${height} ${cornerRadius} ${height} L ${width} ${height}`
+            : `M ${width} 0 L ${width} ${height - cornerRadius} Q ${width} ${height} ${width - cornerRadius} ${height} L 0 ${height}`;
 
         return (
             <div className={`relative flex-shrink-0 ${className}`} style={{ width: `${width}px`, height: `${height}px` }}>
@@ -44,19 +45,21 @@ const RoadmapConnector = ({
                 >
                     <path
                         d={d}
-                        stroke={color}
+                        stroke={stroke}
                         strokeWidth={strokeWidth}
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        opacity={opacity}
+                        fill="none"
                     />
                     {/* Joint Dot at start */}
                     <circle
-                        cx={direction === 'right' ? 2 : width - 2}
+                        cx={direction === 'right' ? 0 : width}
                         cy={0}
-                        r={strokeWidth + 1}
-                        fill="#111111"
-                        stroke={color}
-                        strokeWidth="2"
+                        r={3}
+                        fill="#000"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="1"
                     />
                 </svg>
             </div>

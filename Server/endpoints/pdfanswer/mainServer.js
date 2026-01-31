@@ -1,3 +1,4 @@
+import './utils/cleanupPort.js'; // Ensure port is clear before starting
 import express from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';

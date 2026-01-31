@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import Quiz from './models/Quiz.js';
+import Quiz from './models/supabase/Quiz.js';
 import { authenticateToken } from './middleware/auth.js';
 import { callGemini } from './utils/gemini.js';
 

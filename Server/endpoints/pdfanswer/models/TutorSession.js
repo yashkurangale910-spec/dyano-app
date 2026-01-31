@@ -14,11 +14,7 @@ const tutorSessionSchema = new mongoose.Schema({
     },
     personality: {
         type: String,
-<<<<<<< HEAD
         enum: ['friendly', 'strict', 'socratic', 'professional', 'creative'],
-=======
-        enum: ['friendly', 'strict', 'socratic', 'professional'],
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         default: 'friendly'
     },
     depth: {

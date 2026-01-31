@@ -18,10 +18,11 @@ export const frontendRoadmapData = {
             x: 400,
             y: 100,
             children: ['html', 'javascript'],
-            // ... (rest of nodes with phaseId added)
+            timeEstimate: '2 Hours',
             resources: [
                 { type: 'video', label: 'How the Internet Works', url: 'https://www.youtube.com/watch?v=7_LPdttKXPc' },
-                { type: 'docs', label: 'MDN: How the Web Works', url: 'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/How_the_Web_works' }
+                { type: 'docs', label: 'MDN: How the Web Works', url: 'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/How_the_Web_works' },
+                { type: 'article', label: 'DNS Explained', url: 'https://howdns.works/' }
             ],
             checklist: [
                 'How does the internet work?',
@@ -40,6 +41,12 @@ export const frontendRoadmapData = {
             x: 250,
             y: 250,
             children: ['css'],
+            timeEstimate: '5 Hours',
+            project: {
+                title: 'Personal Profile Page',
+                description: 'Build a simple semantic HTML page about yourself using only HTML tags (no CSS yet). Use lists, headers, and an image.',
+                difficulty: 'Easy'
+            },
             resources: [
                 { type: 'docs', label: 'W3Schools HTML Tutorial', url: 'https://www.w3schools.com/html/' },
                 { type: 'video', label: 'HTML Full Course', url: 'https://www.youtube.com/watch?v=qz0aGYrrlhU' }
@@ -59,9 +66,16 @@ export const frontendRoadmapData = {
             x: 550,
             y: 250,
             children: ['javascript'],
+            timeEstimate: '15 Hours',
+            project: {
+                title: 'Responsive Landing Page',
+                description: 'Create a landing page with a navigation bar, a hero section, and a 3-column feature grid that stacks on mobile.',
+                difficulty: 'Medium'
+            },
             resources: [
                 { type: 'docs', label: 'CSS-Tricks: Flexbox Guide', url: 'https://css-tricks.com/snippets/css/a-guide-to-flexbox/' },
-                { type: 'video', label: 'CSS Grid vs Flexbox', url: 'https://www.youtube.com/watch?v=705XceWW42M' }
+                { type: 'video', label: 'CSS Grid vs Flexbox', url: 'https://www.youtube.com/watch?v=705XceWW42M' },
+                { type: 'game', label: 'Flexbox Froggy', url: 'https://flexboxfroggy.com/' }
             ],
             checklist: [
                 'Box Model',
@@ -70,7 +84,25 @@ export const frontendRoadmapData = {
                 'Responsive Design'
             ]
         },
-        { id: 'javascript', title: 'JavaScript', description: 'Syntax, DOM, Fetch, ES6+, Modular JS', level: 'intermediate', x: 400, y: 400, children: ['vcs'] },
+        {
+            id: 'javascript',
+            title: 'JavaScript',
+            description: 'Syntax, DOM, Fetch, ES6+, Modular JS',
+            level: 'intermediate',
+            x: 400,
+            y: 400,
+            children: ['vcs'],
+            timeEstimate: '40 Hours',
+            project: {
+                title: 'Interactive To-Do List',
+                description: 'Build a task manager where users can add, delete, and mark tasks as done. Save data to LocalStorage.',
+                difficulty: 'Hard'
+            },
+            resources: [
+                { type: 'docs', label: 'javascript.info', url: 'https://javascript.info/' },
+                { type: 'video', label: 'Namaste JavaScript', url: 'https://www.youtube.com/watch?v=pN6jk0uapqY' }
+            ]
+        },
 
         // Infrastructure
         { id: 'vcs', title: 'Version Control', description: 'Git basics and GitHub usage', level: 4, x: 400, y: 550, children: ['web-security'] },

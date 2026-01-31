@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import FlashcardSet from './models/FlashcardSet.js';
+import FlashcardSet from './models/supabase/FlashcardSet.js';
 import { authenticateToken } from './middleware/auth.js';
 import { callGemini } from './utils/gemini.js';
 import { calculateNextReview, getDueCards, getStudyStats } from './utils/spacedRepetition.js';

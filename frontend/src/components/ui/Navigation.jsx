@@ -1,17 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Menu, X, Search, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import Tooltip from './Tooltip';
-=======
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from './LanguageSwitcher';
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 
 export default function Navigation() {
     const { t } = useTranslation();
@@ -24,18 +17,11 @@ export default function Navigation() {
         : [
             { path: '/dashboard', label: t('nav.dashboard') },
             { path: '/quiz', label: t('nav.quiz') },
-<<<<<<< HEAD
             { path: '/roadmap', label: t('nav.roadmap') },
             { path: '/chatbot', label: t('nav.chatbot') },
             { path: '/pdf', label: t('nav.pdf') },
             { path: '/flashcards', label: t('nav.flashcards') },
-=======
-            { path: '/flashcards', label: t('nav.flashcards') },
-            { path: '/pdf', label: t('nav.pdf') },
-            { path: '/chatbot', label: t('nav.chatbot') },
             { path: '/progress', label: t('nav.progress') },
-            { path: '/roadmap', label: t('nav.roadmap') },
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
         ];
 
     return (
@@ -44,7 +30,6 @@ export default function Navigation() {
             animate={{ y: 0 }}
             className="fixed top-0 left-0 right-0 z-[100] h-20 bg-black/40 backdrop-blur-3xl border-b border-white/[0.05]"
         >
-<<<<<<< HEAD
             <div className="container-cosmic h-full flex items-center justify-between">
                 {/* Brand Identity */}
                 <Link to="/" className="flex items-center gap-4 group">
@@ -61,21 +46,10 @@ export default function Navigation() {
                 {/* Desktop High-Density Nav */}
                 <div className="hidden lg:flex items-center gap-10">
                     <div className="flex items-center gap-1">
-=======
-            <div className="container-cosmic h-20 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-3">
-                    <Sparkles className="w-8 h-8 text-cosmic-cyan" />
-                    <span className="text-2xl font-display font-bold text-gradient-glow uppercase tracking-tighter">DYANO</span>
-                </Link>
-
-                <div className="flex items-center gap-6">
-                    <div className="hidden lg:flex items-center gap-6">
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
                         {navItems.map((item) => (
                             <Link
                                 key={item.path}
                                 to={item.path}
-<<<<<<< HEAD
                                 className={`relative px-4 py-2 text-[10px] uppercase tracking-[0.3em] font-black transition-all ${location.pathname === item.path ? 'text-white' : 'text-gray-600 hover:text-white'
                                     }`}
                             >
@@ -89,18 +63,6 @@ export default function Navigation() {
                             </Link>
                         ))}
                     </div>
-=======
-                                className="text-[10px] uppercase tracking-[0.2em] font-display font-bold text-white/40 hover:text-cosmic-cyan transition-all"
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-
-                    <div className="h-8 w-px bg-white/10 hidden md:block" />
-
-                    <LanguageSwitcher />
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 
                     <div className="h-4 w-[1px] bg-white/10" />
 

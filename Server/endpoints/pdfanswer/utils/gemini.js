@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-<<<<<<< HEAD
 // List of models to try in order of preference
 const MODELS = [
     "gemini-2.5-flash",
@@ -24,16 +23,6 @@ export async function callGemini(messages, options = {}) {
         console.error("❌ CRTICAL: GEMINI_API_KEY is missing in process.env");
         throw new Error("GEMINI_API_KEY not found in environment");
     }
-=======
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-
-/**
- * Call Google Gemini AI
- */
-export async function callGemini(messages, options = {}) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY not found in environment");
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 
     // Extract system instruction if it exists
     const systemMsg = messages.find(m => m.role === 'system');
@@ -42,11 +31,7 @@ export async function callGemini(messages, options = {}) {
     // Filter out system message and convert roles
     const filteredMessages = messages.filter(m => m.role !== 'system');
 
-<<<<<<< HEAD
     // Convert to Gemini-style contents
-=======
-    // Convert to Gemini-style contents and merge consecutive same roles
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     const contents = [];
     for (const msg of filteredMessages) {
         const role = msg.role === 'assistant' ? 'model' : 'user';
@@ -83,15 +68,10 @@ export async function callGemini(messages, options = {}) {
         }
     };
 
-<<<<<<< HEAD
-=======
-    // Handle JSON mode if requested
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
     if (options.response_format?.type === 'json_object') {
         body.generationConfig.responseMimeType = "application/json";
     }
 
-<<<<<<< HEAD
     // Try models in sequence
     let lastError = null;
 
@@ -136,31 +116,4 @@ export async function callGemini(messages, options = {}) {
 
     console.error("❌ All Gemini models failed.");
     throw lastError || new Error("All Gemini models failed to respond.");
-=======
-    try {
-        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error("❌ Gemini API Error Details:", JSON.stringify(data, null, 2));
-            throw new Error(data.error?.message || `Gemini API call failed with status ${response.status}`);
-        }
-
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            return data.candidates[0].content.parts[0].text;
-        }
-
-        throw new Error("Invalid response structure from Gemini");
-    } catch (err) {
-        console.error("Gemini Helper Error:", err.message);
-        throw err;
-    }
->>>>>>> f37b43085a606618791e2462184fc2d00039b97c
 }
