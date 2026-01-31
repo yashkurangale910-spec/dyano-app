@@ -5,6 +5,9 @@ import Quiz from '../models/Quiz.js';
 import FlashcardSet from '../models/FlashcardSet.js';
 import Roadmap from '../models/Roadmap.js';
 
+import { StreakService } from '../utils/StreakService.js';
+import { ExpertModelService } from '../utils/ExpertModelService.js';
+
 const router = express.Router();
 
 /**
@@ -14,6 +17,9 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
+
+        // Sync streak first
+        await StreakService.syncStreak(userId);
 
         // Get or create user progress
         let progress = await UserProgress.findOne({ user: userId });
@@ -41,33 +47,10 @@ router.get('/', authenticateToken, async (req, res) => {
         progress.stats.totalFlashcardsLearned = totalFlashcards;
         progress.stats.totalRoadmapsCompleted = completedRoadmaps;
 
-        // Calculate streak
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (progress.dailyStreak.lastActivityDate) {
-            const lastActivity = new Date(progress.dailyStreak.lastActivityDate);
-            lastActivity.setHours(0, 0, 0, 0);
-
-            const daysDiff = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
-
-            if (daysDiff === 0) {
-                // Same day, keep streak
-            } else if (daysDiff === 1) {
-                // Consecutive day, increment streak
-                progress.dailyStreak.count += 1;
-                progress.dailyStreak.lastActivityDate = new Date();
-            } else {
-                // Streak broken
-                progress.dailyStreak.count = 1;
-                progress.dailyStreak.lastActivityDate = new Date();
-            }
-        } else {
-            progress.dailyStreak.count = 1;
-            progress.dailyStreak.lastActivityDate = new Date();
-        }
-
         await progress.save();
+
+        // Check for new achievements
+        await StreakService.checkMilestones(userId);
 
         res.json({
             success: true,
@@ -175,6 +158,48 @@ router.get('/achievements', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch achievements',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * Get neural density map for 3D visualization
+ * @route GET /progress/neural-density
+ */
+router.get('/neural-density', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const density = await StreakService.getNeuralDensity(userId);
+        res.json({
+            success: true,
+            data: density
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch neural density',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * Get expert blueprint for Cerebral Mesh comparison
+ * @route GET /progress/expert-mesh/:category
+ */
+router.get('/expert-mesh/:category', authenticateToken, async (req, res) => {
+    try {
+        const { category } = req.params;
+        const blueprint = await ExpertModelService.getExpertBlueprint(category);
+        res.json({
+            success: true,
+            data: blueprint
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch expert blueprint',
             error: error.message
         });
     }

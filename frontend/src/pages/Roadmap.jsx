@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, Plus, Search, Sparkles, Loader2, Compass, Layout, Code, Database, Server, Smartphone, Globe, ArrowRight, X, BookOpen } from 'lucide-react';
+import { ChevronUp, Plus, Search, Sparkles, Loader2, Compass, Layout, Code, Database, Server, Smartphone, Globe, ArrowRight, X, BookOpen, RefreshCw } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3005';
 
 // New Data & Components
 import { roadmapRegistry, getRoadmapsByCategory, getRoadmapById } from '../data/roadmapRegistry';
@@ -14,6 +16,7 @@ import KnowledgeUniverse from '../components/three/KnowledgeUniverse';
 import GlassCard from '../components/ui/GlassCard';
 import CosmicInput from '../components/ui/CosmicInput';
 import ParticleButton from '../components/ui/ParticleButton';
+import LogicCombat from '../components/roadmap/LogicCombat';
 
 export default function Roadmap() {
     const { t } = useTranslation();
@@ -23,28 +26,66 @@ export default function Roadmap() {
     const [customTopic, setCustomTopic] = useState('');
     const [activeCategory, setActiveCategory] = useState('Role based'); // Role based | Skill based
 
+    // Dungeon Mode State
+    const [isDungeonMode, setIsDungeonMode] = useState(false);
+    const [activeBossQuiz, setActiveBossQuiz] = useState(null);
+
     // Custom AI Roadmaps
     const { status, userRoadmaps, generateRoadmap, error } = useRoadmaps();
 
+    // Search Worker State
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Initialize Worker
+    const searchWorker = useMemo(() => new Worker(new URL('../workers/SearchWorker.js', import.meta.url), { type: 'module' }), []);
+
+    useEffect(() => {
+        // Index roadmaps on mount
+        const allRoadmaps = Object.entries(roadmapRegistry).map(([id, meta]) => ({
+            id,
+            title: meta.data?.title || id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            category: meta.category,
+            type: meta.type,
+            data: meta.data,
+            description: meta.data?.description || '',
+            isNew: meta.isNew
+        }));
+
+        searchWorker.postMessage({ type: 'INDEX', payload: allRoadmaps, id: 'init' });
+
+        searchWorker.onmessage = (e) => {
+            const { type, payload } = e.data;
+            if (type === 'SEARCH_COMPLETE') {
+                const results = payload.map(r => allRoadmaps.find(rm => rm.id === r.id)).filter(Boolean);
+                setSearchResults(results);
+                setIsSearching(false);
+            }
+        };
+
+        return () => searchWorker.terminate();
+    }, [searchWorker]);
+
+    // Handle Search
+    useEffect(() => {
+        if (searchQuery.trim()) {
+            setIsSearching(true);
+            searchWorker.postMessage({ type: 'SEARCH', payload: searchQuery, id: Date.now() });
+        } else {
+            setSearchResults([]);
+        }
+    }, [searchQuery, searchWorker]);
+
     // Browser Data
     const availableRoadmaps = useMemo(() => {
-        // If there's a search query, search all roadmaps regardless of category
+        // If there's a search query, use worker results
         if (searchQuery.trim()) {
-            return Object.entries(roadmapRegistry).map(([id, meta]) => ({
-                id,
-                title: meta.data?.title || id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-                category: meta.category,
-                type: meta.type,
-                isNew: meta.isNew
-            })).filter(rm =>
-                rm.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                rm.category.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+            return searchResults;
         }
 
         // Otherwise, filter by active category
         return getRoadmapsByCategory(activeCategory);
-    }, [activeCategory, searchQuery]);
+    }, [activeCategory, searchQuery, searchResults]);
 
     // Helper to transform API steps to Viz nodes
     const transformApiRoadmap = (apiData) => {
@@ -113,19 +154,73 @@ export default function Roadmap() {
         return JSON.parse(localStorage.getItem('dyano_node_progress') || '{}');
     });
 
-    const handleNodeClick = (node) => {
+    const handleNodeClick = async (node) => {
+        // If Dungeon Mode is active, check for Boss encounter
+        if (isDungeonMode) {
+            const nodeIndex = activeRoadmapData.nodes.findIndex(n => n.id === node.id);
+            const currentData = nodeProgress[node.id] || {};
+            const currentStatus = currentData.status || (typeof nodeProgress[node.id] === 'string' ? nodeProgress[node.id] : 'DEFAULT');
+
+            if ((nodeIndex + 1) % 4 === 0 && currentStatus !== 'MASTERED') {
+                setIsRewinding(true); // Re-use loading state for boss generation
+                try {
+                    const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
+                    const response = await axios.post(`${API_URL}/quiz`, {
+                        prompt: node.title,
+                        isBossEncounter: true,
+                        framework: activeRoadmapData.title
+                    }, {
+                        headers: { Authorization: `Bearer ${user.token}` }
+                    });
+                    if (response.data.success) {
+                        setActiveBossQuiz(response.data.quiz);
+                    }
+                } catch (err) {
+                    console.error("Boss Generation Failed:", err);
+                } finally {
+                    setIsRewinding(false);
+                }
+                return;
+            }
+        }
+
         const states = ['DEFAULT', 'LEARNING', 'MASTERED', 'SKIPPED'];
-        const currentStatus = nodeProgress[node.id] || 'DEFAULT';
+        const currentData = nodeProgress[node.id] || {};
+        const currentStatus = currentData.status || (typeof nodeProgress[node.id] === 'string' ? nodeProgress[node.id] : 'DEFAULT');
         const nextIndex = (states.indexOf(currentStatus) + 1) % states.length;
         const nextStatus = states[nextIndex];
 
         const newProgress = {
             ...nodeProgress,
-            [node.id]: nextStatus
+            [node.id]: {
+                status: nextStatus,
+                masteredAt: nextStatus === 'MASTERED' ? new Date().toISOString() : (currentData.masteredAt || null)
+            }
         };
 
         setNodeProgress(newProgress);
         localStorage.setItem('dyano_node_progress', JSON.stringify(newProgress));
+    };
+
+    const [rewindSummary, setRewindSummary] = useState(null);
+    const [isRewinding, setIsRewinding] = useState(false);
+
+    const handleRewind = async () => {
+        if (!selectedRoadmapId || isRewinding) return;
+        setIsRewinding(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
+            const response = await axios.get(`${API_URL}/roadmap/rewind/${selectedRoadmapId}`, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            if (response.data.success) {
+                setRewindSummary(response.data.summary);
+            }
+        } catch (err) {
+            console.error("Neural Rewind Failed:", err);
+        } finally {
+            setIsRewinding(false);
+        }
     };
 
     const handleGenerate = async (e) => {
@@ -296,24 +391,85 @@ export default function Roadmap() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
                         animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                        className="bg-black/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 overflow-hidden min-h-[85vh] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+                        className={`bg-black/60 backdrop-blur-3xl rounded-[2.5rem] border transition-all duration-1000 overflow-hidden min-h-[85vh] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] ${isDungeonMode ? 'border-red-950 shadow-red-900/20' : 'border-white/10'}`}
                     >
-                        <div className="border-b border-white/5 p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 bg-white/[0.02]">
+                        <div className={`border-b p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 transition-colors duration-1000 ${isDungeonMode ? 'border-red-950 bg-red-950/10' : 'border-white/5 bg-white/[0.02]'}`}>
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-1.5 h-1.5 bg-cosmic-cyan rounded-full animate-ping" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">Live Cognitive View</span>
+                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${isDungeonMode ? 'bg-red-600' : 'bg-cosmic-cyan'}`} />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">{isDungeonMode ? 'Abyssal Cognitive View' : 'Live Cognitive View'}</span>
                                 </div>
                                 <h2 className="text-4xl md:text-5xl font-display font-black text-white tracking-tighter mb-4">{activeRoadmapData.title}</h2>
                                 <p className="text-gray-500 text-lg font-light leading-relaxed max-w-2xl">{activeRoadmapData.description}</p>
                             </div>
-                            <button
-                                onClick={() => setViewMode('browser')}
-                                className="group flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all"
-                            >
-                                <X size={14} className="group-hover:rotate-90 transition-transform" /> {t('roadmap.viewer.close')}
-                            </button>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setIsDungeonMode(!isDungeonMode)}
+                                    className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border duration-500 ${isDungeonMode ? 'bg-red-600/20 border-red-600 text-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]' : 'bg-white/5 border-white/10 text-white'}`}
+                                >
+                                    <Sword size={14} className={isDungeonMode ? 'animate-pulse' : ''} /> {isDungeonMode ? 'Dungeon_Active' : 'Dungeon_Protocol'}
+                                </button>
+                                <button
+                                    onClick={handleRewind}
+                                    disabled={isRewinding}
+                                    className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cosmic-purple/10 to-cosmic-cyan/10 hover:from-cosmic-purple/20 hover:to-cosmic-cyan/20 border border-cosmic-cyan/30 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-cosmic-cyan transition-all disabled:opacity-50"
+                                >
+                                    {isRewinding ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />}
+                                    Neural Rewind
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('browser')}
+                                    className="group flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all"
+                                >
+                                    <X size={14} className="group-hover:rotate-90 transition-transform" /> {t('roadmap.viewer.close')}
+                                </button>
+                            </div>
                         </div>
+
+                        <AnimatePresence>
+                            {rewindSummary && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 z-[100] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md"
+                                >
+                                    <motion.div
+                                        initial={{ scale: 0.9, y: 20 }}
+                                        animate={{ scale: 1, y: 0 }}
+                                        exit={{ scale: 0.9, y: 20 }}
+                                        className="max-w-2xl w-full bg-[#0a0a1a] border border-cosmic-cyan/30 rounded-[2rem] p-10 relative overflow-hidden shadow-[0_0_50px_rgba(0,245,255,0.2)]"
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cosmic-cyan to-transparent animate-pulse" />
+
+                                        <div className="flex justify-between items-center mb-8">
+                                            <div className="flex items-center gap-3">
+                                                <RefreshCw size={20} className="text-cosmic-cyan animate-spin-slow" />
+                                                <span className="text-xs font-black uppercase tracking-[0.3em] text-cosmic-cyan">Cognitive Rewind Active</span>
+                                            </div>
+                                            <button onClick={() => setRewindSummary(null)} className="text-gray-500 hover:text-white transition-colors">
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+
+                                        <div className="prose prose-invert max-w-none">
+                                            <p className="text-lg text-gray-300 leading-relaxed font-light italic">
+                                                {rewindSummary}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-10 pt-8 border-t border-white/5 flex justify-end">
+                                            <button
+                                                onClick={() => setRewindSummary(null)}
+                                                className="px-8 py-3 bg-cosmic-cyan/10 hover:bg-cosmic-cyan/20 border border-cosmic-cyan/30 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-cosmic-cyan transition-all"
+                                            >
+                                                Resynchronization Complete
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <div className="flex-1 overflow-auto p-8 md:p-16 relative bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]">
                             <div className="w-full max-w-5xl mx-auto">
@@ -427,6 +583,21 @@ export default function Roadmap() {
                     </motion.div>
                 )}
 
+                <AnimatePresence>
+                    {activeBossQuiz && (
+                        <LogicCombat
+                            quiz={activeBossQuiz}
+                            onVictory={(quiz) => {
+                                const node = activeRoadmapData.nodes.find(n => n.title === quiz.topic);
+                                if (node) {
+                                    handleNodeClick(node);
+                                }
+                                setActiveBossQuiz(null);
+                            }}
+                            onDefeat={() => setActiveBossQuiz(null)}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

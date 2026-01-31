@@ -12,6 +12,7 @@ import { dirname } from 'path';
 import quizRouter from "./quiz.js";
 import flashcardsRouter from "./flashcards.js";
 import roadmapRouter from "./roadmap.js";
+import analysisRouter from "./routes/analysis.js";
 import tutorRouter from "./tutor.js";
 import authRouter from "./routes/auth.js";
 import progressRouter from "./routes/progress.js";
@@ -111,6 +112,7 @@ app.use("/pdf", apiLimiter, pdfRouter);
 app.use("/quiz", aiLimiter, quizRouter);
 app.use("/flashcards", aiLimiter, flashcardsRouter);
 app.use("/roadmap", aiLimiter, roadmapRouter);
+app.use("/analysis", aiLimiter, analysisRouter);
 app.use("/tutor", aiLimiter, tutorRouter);
 
 // 404 handler
@@ -136,6 +138,9 @@ app.use((err, req, res, next) => {
     });
 });
 
+import { WebSocketServer } from 'ws';
+import { setupWSConnection } from 'y-websocket/bin/utils';
+
 // Server configuration
 const PORT = process.env.PORT || 3005;
 
@@ -144,6 +149,21 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`🚀 Dyano API Server running on port ${PORT}`);
         console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+        console.log(`⚡ Neural Sync (WebSocket) ready`);
+    });
+
+    // Initialize WebSocket Server for CRDTs
+    const wss = new WebSocketServer({ noServer: true });
+
+    wss.on('connection', (ws, req) => {
+        setupWSConnection(ws, req);
+    });
+
+    server.on('upgrade', (request, socket, head) => {
+        // You can handle authentication here if needed
+        wss.handleUpgrade(request, socket, head, (ws) => {
+            wss.emit('connection', ws, request);
+        });
     });
 
     // Graceful shutdown

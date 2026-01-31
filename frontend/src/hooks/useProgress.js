@@ -7,6 +7,7 @@ export default function useProgress() {
     const [status, setStatus] = useState('idle');
     const [progressData, setProgressData] = useState(null);
     const [achievements, setAchievements] = useState([]);
+    const [neuralDensity, setNeuralDensity] = useState({});
 
     const fetchProgress = useCallback(async () => {
         setStatus('loading');
@@ -22,6 +23,20 @@ export default function useProgress() {
         } catch (error) {
             console.error("Failed to fetch progress:", error);
             setStatus('error');
+        }
+    }, []);
+
+    const fetchNeuralDensity = useCallback(async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
+            const response = await axios.get(`${API_URL}/progress/neural-density`, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            if (response.data.success) {
+                setNeuralDensity(response.data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch neural density:", error);
         }
     }, []);
 
@@ -42,15 +57,18 @@ export default function useProgress() {
     useEffect(() => {
         fetchProgress();
         fetchAchievements();
-    }, [fetchProgress, fetchAchievements]);
+        fetchNeuralDensity();
+    }, [fetchProgress, fetchAchievements, fetchNeuralDensity]);
 
     return {
         status,
         progressData,
         achievements,
+        neuralDensity,
         refresh: () => {
             fetchProgress();
             fetchAchievements();
+            fetchNeuralDensity();
         }
     };
 }

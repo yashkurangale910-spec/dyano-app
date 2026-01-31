@@ -95,8 +95,13 @@ Return ONLY a JSON object with:
 `;
 
   try {
-    const finalSystemPrompt = systemPrompt + frameworkContext;
-    const finalUserPrompt = `Generate a quiz about: "${prompt}". Difficulty: ${difficulty}. Ensure you follow the UNIVERSAL TOPIC QUIZ ENGINE rules strictly.`;
+    const { isBossEncounter = false } = req.body;
+    const bossProtocol = isBossEncounter
+      ? `\nCRITICAL: This is a BOSS ENCOUNTER. Generate the MOST CHALLENGING, deep-knowledge questions possible. Focus on edge cases, complex logic, and synthesis of multiple concepts. The tone should be imposing and high-stakes.`
+      : '';
+
+    const finalSystemPrompt = systemPrompt + frameworkContext + bossProtocol;
+    const finalUserPrompt = `Generate a quiz about: "${prompt}". Difficulty: ${isBossEncounter ? 'EXTREME' : difficulty}. Ensure you follow the UNIVERSAL TOPIC QUIZ ENGINE rules strictly.`;
 
     const responseText = await callGemini([
       { role: 'system', content: finalSystemPrompt },

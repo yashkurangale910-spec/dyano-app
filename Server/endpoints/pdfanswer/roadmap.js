@@ -81,4 +81,53 @@ roadmapRouter.get("/", authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * Get a "Neural Rewind" summary of the last 3 completed nodes
+ * @route GET /roadmap/rewind/:id
+ */
+roadmapRouter.get("/rewind/:id", authenticateToken, async (req, res) => {
+    try {
+        const roadmap = await Roadmap.findOne({ _id: req.params.id, user: req.user.userId });
+
+        if (!roadmap) {
+            return res.status(404).json({ success: false, message: "Roadmap not found" });
+        }
+
+        const completedSteps = roadmap.steps
+            .filter(step => step.isCompleted)
+            .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+            .slice(0, 3);
+
+        if (completedSteps.length === 0) {
+            return res.json({
+                success: true,
+                summary: "NEURAL_LINK_STABLE: No mastered nodes detected. Proceed with initialization."
+            });
+        }
+
+        const stepsText = completedSteps.map(s => `- ${s.title}: ${s.description}`).join('\n');
+
+        const summaryResponse = await callGemini([
+            {
+                role: 'system',
+                content: `You are the Spark.E Neural Refresher. Generate a high-intensity, cinematic "Neural Rewind" summary of the user's recently mastered topics. 
+                FORMAT: 
+                - Use a "Cognitive Pulse" style (prefix with NEURAL_LINK_ESTABLISHED).
+                - Be concise (max 100 words).
+                - Highlight key takeaways and how they connect to the OVERALL GOAL: ${roadmap.goal}.
+                - End with a motivating "Ready for Synthesis" signal.`
+            },
+            {
+                role: 'user',
+                content: `Topics to refresh:\n${stepsText}`
+            }
+        ]);
+
+        res.json({ success: true, summary: summaryResponse });
+    } catch (error) {
+        console.error("Rewind Error:", error);
+        res.status(500).json({ success: false, message: "Failed to generate rewire", error: error.message });
+    }
+});
+
 export default roadmapRouter;

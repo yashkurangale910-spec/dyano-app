@@ -29,8 +29,20 @@ export default function KnowledgeUniverse({ count = 5000 }) {
     // Animate the particle field
     useFrame((state) => {
         if (pointsRef.current) {
-            pointsRef.current.rotation.x = state.clock.elapsedTime * 0.05;
-            pointsRef.current.rotation.y = state.clock.elapsedTime * 0.075;
+            // Base rotation
+            pointsRef.current.rotation.x = state.clock.elapsedTime * 0.02;
+            pointsRef.current.rotation.y = state.clock.elapsedTime * 0.03;
+
+            // Mouse Parallax
+            const targetX = state.mouse.x * 0.5;
+            const targetY = state.mouse.y * 0.5;
+
+            pointsRef.current.rotation.x += (targetY - pointsRef.current.rotation.x) * 0.05;
+            pointsRef.current.rotation.y += (targetX - pointsRef.current.rotation.y) * 0.05;
+
+            // Neural Noise (subtle jitter)
+            pointsRef.current.position.x = Math.sin(state.clock.elapsedTime * 2) * 0.02;
+            pointsRef.current.position.y = Math.cos(state.clock.elapsedTime * 1.5) * 0.02;
         }
     });
 

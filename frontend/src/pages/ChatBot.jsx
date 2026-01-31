@@ -67,7 +67,9 @@ const PERSONALITY_THEMES = {
     creative: { shadow: 'shadow-cosmic-pink/20', primary: 'cosmic-pink', secondary: 'cosmic-cyan', accent: 'yellow-400' },
     socratic: { shadow: 'shadow-cosmic-purple/20', primary: 'cosmic-purple', secondary: 'cosmic-cyan', accent: 'indigo-400' },
     professional: { shadow: 'shadow-blue-500/20', primary: 'blue-500', secondary: 'gray-500', accent: 'blue-400' },
-    robotic: { shadow: 'shadow-white/10', primary: 'gray-400', secondary: 'cosmic-cyan', accent: 'cosmic-cyan' }
+    robotic: { shadow: 'shadow-white/10', primary: 'gray-400', secondary: 'cosmic-cyan', accent: 'cosmic-cyan' },
+    feynman: { shadow: 'shadow-cosmic-gold/20', primary: 'cosmic-gold', secondary: 'cosmic-cyan', accent: 'cosmic-gold' },
+    lovelace: { shadow: 'shadow-cosmic-purple/20', primary: 'cosmic-purple', secondary: 'cosmic-pink', accent: 'cosmic-pink' }
 };
 
 const PERSONALITIES = [
@@ -76,7 +78,10 @@ const PERSONALITIES = [
     { id: 'creative', label: 'Neural Fusion', desc: 'Uses metaphors, visual analogies, and cross-disciplinary connections.', icon: '🎨' },
     { id: 'socratic', label: 'Socratic Master', desc: 'Never gives direct answers. Guides through questioning.', icon: '🧘' },
     { id: 'professional', label: 'Senior Consultant', desc: 'Formal, structured, and cites theoretical frameworks.', icon: '💼' },
-    { id: 'robotic', label: 'Cyborg Unit', desc: 'Direct, logical, and purely computational. Uses mechanical syntax.', icon: '🤖' }
+    { id: 'robotic', label: 'Cyborg Unit', desc: 'Direct, logical, and purely computational. Uses mechanical syntax.', icon: '🤖' },
+    { id: 'feynman', label: 'Richard Feynman', desc: 'Analogy-rich teaching from first principles. "Poetical Science" at its finest.', icon: '⚛️' },
+    { id: 'lovelace', label: 'Ada Lovelace', desc: 'Precise, logical, and visionary. Weaving algebraic patterns of knowledge.', icon: '🧵' },
+    { id: 'socratic_mirror', label: 'Novice Student', desc: 'Active mastery mode. Teach me the concept to solidify your own knowledge.', icon: '🧪' }
 ];
 
 const DEPTH_LEVELS = [
@@ -130,6 +135,8 @@ export default function ChatBot() {
     const [problemText, setProblemText] = useState('');
     const [solverResult, setSolverResult] = useState(null);
     const [isDeepContext, setIsDeepContext] = useState(true);
+    const [isSynapticMirrorEnabled, setIsSynapticMirrorEnabled] = useState(true);
+    const [isDebugMode, setIsDebugMode] = useState(false);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -326,7 +333,8 @@ export default function ChatBot() {
                 documentId: selectedPdf?._id,
                 isDeepContext,
                 language: language,
-                framework: selectedFramework
+                framework: selectedFramework,
+                debug: isDebugMode
             });
 
             if (result && result.success) {
@@ -335,6 +343,7 @@ export default function ChatBot() {
                 // --- SYNAPTIC PULSE: SIMULATED STREAMING ---
                 const fullText = typeof result.response === 'string' ? result.response : result.response?.response;
                 const citations = result.response?.citations || [];
+                const debugInfo = result.debugInfo;
 
                 // Add an empty assistant message first
                 const assistantMsgIndex = messages.length + 1;
@@ -342,6 +351,7 @@ export default function ChatBot() {
                     role: 'assistant',
                     content: '', // Start empty
                     citations: citations,
+                    debugInfo: debugInfo,
                     isStreaming: true,
                     timestamp: new Date()
                 }]);
@@ -508,6 +518,21 @@ export default function ChatBot() {
                     </div>
 
                     <div>
+                        <p className="px-3 text-[9px] uppercase tracking-[0.3em] font-bold text-gray-600 mb-4">Neural Protocols</p>
+                        <div className="px-3 space-y-2">
+                            <div className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isSynapticMirrorEnabled ? 'bg-cosmic-cyan animate-pulse' : 'bg-gray-600'}`} />
+                                    <span className="text-[8px] font-bold text-white uppercase tracking-wider">Synaptic Mirror</span>
+                                </div>
+                                <span className={`text-[7px] font-black uppercase ${isSynapticMirrorEnabled ? 'text-cosmic-cyan' : 'text-gray-600'}`}>
+                                    {isSynapticMirrorEnabled ? 'Synchronized' : 'Standby'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
                         <p className="px-3 text-[9px] uppercase tracking-[0.3em] font-bold text-gray-600 mb-4">Session Timeline</p>
                         <div className="space-y-3 px-1">
                             {messages.slice(-3).reverse().map((m, i) => (
@@ -552,6 +577,12 @@ export default function ChatBot() {
                                     className={`px-3 py-1 rounded-full border text-[8px] transition-all ${isZenMode ? 'bg-cosmic-cyan/20 border-cosmic-cyan text-cosmic-cyan' : 'border-white/10 text-gray-500 hover:text-white'}`}
                                 >
                                     ZEN {isZenMode ? 'ON' : 'OFF'}
+                                </button>
+                                <button
+                                    onClick={() => setIsDebugMode(!isDebugMode)}
+                                    className={`px-3 py-1 rounded-full border text-[8px] transition-all ${isDebugMode ? 'bg-red-500/20 border-red-500 text-red-500' : 'border-white/10 text-gray-500 hover:text-white'}`}
+                                >
+                                    DEBUG {isDebugMode ? 'ON' : 'OFF'}
                                 </button>
                             </h2>
                         </div>
@@ -636,6 +667,18 @@ export default function ChatBot() {
                                                                         [{cite.source || 'Doc'} p.{cite.page || '?'}]
                                                                     </div>
                                                                 ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* DEBUG INFO (Hacker-Tier) */}
+                                                    {msg.debugInfo && isDebugMode && (
+                                                        <div className="mt-4 pt-4 border-t border-red-500/20 space-y-2 font-mono">
+                                                            <div className="text-[9px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
+                                                                <Shield size={10} /> System Synapse
+                                                            </div>
+                                                            <div className="bg-black/40 p-3 rounded text-[9px] text-gray-400 whitespace-pre-wrap border border-red-500/10">
+                                                                {msg.debugInfo.systemPrompt}
                                                             </div>
                                                         </div>
                                                     )}

@@ -58,7 +58,7 @@ export default function useTutor() {
         }
     }, []);
 
-    const sendMessage = useCallback(async ({ message, image, personality, depth, sessionId, documentId, isDeepContext, language, framework }) => {
+    const sendMessage = useCallback(async ({ message, image, personality, depth, sessionId, documentId, isDeepContext, language, framework, debug }) => {
         console.log('🚀 sendMessage triggered', { message, hasImage: !!image });
         setStatus('loading');
 
@@ -72,6 +72,7 @@ export default function useTutor() {
         if (isDeepContext !== undefined) formData.append('isDeepContext', isDeepContext);
         if (language) formData.append('language', language);
         if (framework) formData.append('framework', framework);
+        if (debug) formData.append('debug', debug);
 
         try {
             // CRITICAL: DO NOT set 'Content-Type': 'multipart/form-data' manually with Axios + FormData

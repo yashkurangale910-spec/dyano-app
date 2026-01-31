@@ -22,7 +22,10 @@
     "express-validator": "^7.3.1",
     "file-type": "^18.5.0",
     "mongoose": "^9.1.5",
-    "openai": "^4.24.7"
+    "openai": "^4.24.7",
+    "ws": "^8.19.0",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.29"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

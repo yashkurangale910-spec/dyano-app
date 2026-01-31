@@ -12,7 +12,9 @@ const userProgressSchema = new mongoose.Schema({
         averageScore: { type: Number, default: 0 },
         totalFlashcardsLearned: { type: Number, default: 0 },
         totalRoadmapsCompleted: { type: Number, default: 0 },
-        studyTimeMinutes: { type: Number, default: 0 }
+        studyTimeMinutes: { type: Number, default: 0 },
+        totalXP: { type: Number, default: 0 },
+        level: { type: Number, default: 1 }
     },
     dailyStreak: {
         count: { type: Number, default: 0 },

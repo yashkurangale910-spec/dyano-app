@@ -24,11 +24,14 @@ export default function ParticleButton({
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        const newParticles = Array.from({ length: 12 }, (_, i) => ({
+        const newParticles = Array.from({ length: 16 }, (_, i) => ({
             id: Date.now() + i,
             x,
             y,
-            angle: (i * 30) * (Math.PI / 180),
+            angle: (i * 22.5 + (Math.random() * 10 - 5)) * (Math.PI / 180),
+            speed: 50 + Math.random() * 80,
+            size: 1 + Math.random() * 3,
+            life: 0.5 + Math.random() * 0.5
         }));
 
         setParticles(newParticles);
@@ -83,15 +86,17 @@ export default function ParticleButton({
                         scale: 1
                     }}
                     animate={{
-                        x: particle.x + Math.cos(particle.angle) * 100,
-                        y: particle.y + Math.sin(particle.angle) * 100,
+                        x: particle.x + Math.cos(particle.angle) * particle.speed,
+                        y: particle.y + Math.sin(particle.angle) * particle.speed,
                         opacity: 0,
                         scale: 0,
                     }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className="absolute w-2 h-2 bg-cosmic-cyan rounded-full pointer-events-none"
+                    transition={{ duration: particle.life, ease: 'easeOut' }}
+                    className="absolute rounded-full pointer-events-none bg-cosmic-cyan"
                     style={{
-                        boxShadow: '0 0 10px var(--cosmic-cyan)',
+                        width: particle.size,
+                        height: particle.size,
+                        boxShadow: `0 0 ${particle.size * 2}px var(--cosmic-cyan)`,
                     }}
                 />
             ))}

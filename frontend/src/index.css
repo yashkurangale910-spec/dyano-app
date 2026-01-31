@@ -9,10 +9,16 @@
   --cosmic-void: #020105;
   --cosmic-deep: #0a0118;
   --cosmic-nebula: #110425;
-  --cosmic-purple: #7000ff;
+  --cosmic-purple: #7b2cbf;
+  --cosmic-purple-hsl: 269, 56%, 46%;
   --cosmic-pink: #d946ef;
   --cosmic-cyan: #00f5ff;
+  --cosmic-cyan-hsl: 182, 100%, 50%;
   --cosmic-gold: #fbbf24;
+  --cosmic-crimson: #dc2626;
+  --cosmic-crimson-hsl: 0, 72%, 51%;
+  --cosmic-obsidian: #050505;
+  --cosmic-obsidian-hsl: 0, 0%, 2%;
   --cosmic-emerald: #10b981;
 
   /* High-Fidelity Glassmorphism */
@@ -58,6 +64,24 @@
   --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --border-color: rgba(255, 255, 255, 0.2);
+}
+
+@layer utilities {
+  .shadow-glow-cyan {
+    box-shadow: 0 0 20px hsla(var(--cosmic-cyan-hsl), 0.5), 0 0 40px hsla(var(--cosmic-cyan-hsl), 0.2);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 20px hsla(var(--cosmic-purple-hsl), 0.5), 0 0 40px hsla(var(--cosmic-purple-hsl), 0.2);
+  }
+
+  .shadow-glow-pink {
+    box-shadow: 0 0 20px hsla(300, 85%, 61%, 0.5), 0 0 40px hsla(300, 85%, 61%, 0.2);
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 10px hsla(var(--cosmic-cyan-hsl), 0.8);
+  }
 }
 
 * {

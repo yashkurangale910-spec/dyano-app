@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +19,9 @@ import {
     FileText,
     Bot,
     Info,
-    Rocket
+    Rocket,
+    X,
+    Shield
 } from 'lucide-react';
 
 import { Canvas } from '@react-three/fiber';
@@ -29,29 +32,37 @@ import DashboardStats from '../components/dashboard/DashboardStats';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import Tooltip from '../components/ui/Tooltip';
 
-// Data
-import { LEARNING_TOOLS, RECENT_ACTIVITY } from '../constants/landingContent';
+import KnowledgeBadge from '../components/dashboard/KnowledgeBadge';
+import NeuralDigitalTwin from '../components/dashboard/NeuralDigitalTwin';
+import MemoryPalace from '../components/dashboard/MemoryPalace';
+import DeepStudyOverlay from '../components/ui/DeepStudyOverlay';
+import SingularityProtocol from '../components/special/SingularityProtocol';
 
 export default function Dashboard() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { progressData } = useProgress();
+    const { progressData, neuralDensity } = useProgress();
+    const [isDeepStudyActive, setIsDeepStudyActive] = useState(false);
+    const [dashboardView, setDashboardView] = useState('twin'); // 'twin' or 'palace'
+    const [isSingularityActive, setIsSingularityActive] = useState(false);
 
-    // Derive stats if available
+    // ... stats logic ...
     const stats = (progressData && progressData.progress) ? [
         { id: 'streak', label: t('dashboard.stats.uptime'), value: `${progressData.progress.dailyStreak?.count || 0} Days`, Icon: Flame, color: 'text-cosmic-gold', glow: 'gold', path: '/progress' },
-        { id: 'index', label: t('dashboard.stats.index'), value: (progressData.progress.stats?.averageScore || 0).toString(), Icon: Star, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
-        { id: 'modules', label: t('dashboard.stats.modules'), value: ((progressData.progress.stats?.totalQuizzesTaken || 0) + (progressData.progress.stats?.totalRoadmapsCompleted || 0)).toString(), Icon: Award, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
+        { id: 'xp', label: 'Neural XP', value: `${progressData.progress.stats?.totalXP || 0} / ${((progressData.progress.stats?.level || 1) * 1000)}`, Icon: Zap, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
+        { id: 'level', label: 'Symmetry Level', value: `LVL ${progressData.progress.stats?.level || 1}`, Icon: Rocket, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
         { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '94%', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple', path: '/progress' }
     ] : [
         { id: 'streak', label: t('dashboard.stats.uptime'), value: '0 Days', Icon: Flame, color: 'text-cosmic-gold', glow: 'gold', path: '/progress' },
-        { id: 'index', label: t('dashboard.stats.index'), value: '0', Icon: Star, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
-        { id: 'modules', label: t('dashboard.stats.modules'), value: '0', Icon: Award, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
+        { id: 'xp', label: 'Neural XP', value: '0 / 1000', Icon: Zap, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
+        { id: 'level', label: 'Symmetry Level', value: 'LVL 1', Icon: Rocket, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
         { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '--', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple', path: '/progress' }
     ];
 
     const hasNoActivity = !progressData || (progressData.progress?.stats?.totalQuizzesTaken === 0 && progressData.progress?.stats?.totalRoadmapsCompleted === 0);
+
+    const xpPercentage = progressData ? ((progressData.progress.stats?.totalXP % 1000) / 10).toString() : '0';
 
     return (
         <div className="w-full relative min-h-screen">
@@ -80,7 +91,7 @@ export default function Dashboard() {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="text-6xl md:text-7xl font-display font-black text-white tracking-tighter mb-4"
                                 >
-                                    {t('dashboard.title')}
+                                    Command <span className="text-gradient-cosmic">Center</span>
                                 </motion.h1>
                                 <motion.p
                                     initial={{ opacity: 0 }}
@@ -88,18 +99,170 @@ export default function Dashboard() {
                                     transition={{ delay: 0.2 }}
                                     className="text-gray-500 text-xl font-light tracking-wide max-w-xl"
                                 >
-                                    {t('dashboard.welcome', { name: user?.name || 'Explorer' })}. Synthesis protocols are ready for initialization.
+                                    Welcome back, {user?.name || 'Explorer'}. Neural synchronization is at {xpPercentage}% for Level {progressData?.progress.stats?.level || 1}.
                                 </motion.p>
                             </div>
-                            <div className="text-right">
-                                <div className="text-[10px] text-gray-700 font-black uppercase tracking-[0.4em]">Sector-07 // NODE-DYN</div>
-                                <div className="text-2xl font-display font-bold text-white/20">v4.2.0-STABLE</div>
+
+                            {/* XP Progress Bar */}
+                            <div className="md:w-72 bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Neural Sync</span>
+                                    <span className="text-[10px] font-bold text-cosmic-cyan">{xpPercentage}%</span>
+                                </div>
+                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${xpPercentage}%` }}
+                                        className="h-full bg-gradient-to-r from-cosmic-cyan to-cosmic-purple shadow-glow-cyan"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </header>
 
                     {/* Stats Section */}
                     {stats && <DashboardStats stats={stats} />}
+
+                    {/* Knowledge Vault (Badges) */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mb-16"
+                    >
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-600">Knowledge Vault</h2>
+                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                            {(progressData?.progress?.achievements || []).map((achievement, idx) => (
+                                <KnowledgeBadge
+                                    key={idx}
+                                    id={achievement.name}
+                                    unlocked={true}
+                                    unlockedAt={achievement.unlockedAt}
+                                />
+                            ))}
+                            {/* Placeholders for locked badges */}
+                            {Array.from({ length: Math.max(0, 6 - (progressData?.progress?.achievements?.length || 0)) }).map((_, i) => (
+                                <KnowledgeBadge key={`locked-${i}`} unlocked={false} />
+                            ))}
+                        </div>
+                    </motion.section>
+
+                    {/* Singularity Trigger (Phase 12) - Visible only if density is high */}
+                    {neuralDensity >= 0.9 && (
+                        <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setIsSingularityActive(true)}
+                            className="w-full mb-12 p-8 bg-gradient-to-r from-cosmic-cyan via-cosmic-purple to-cosmic-cyan bg-[length:200%_auto] animate-gradient text-black font-black uppercase tracking-[0.5em] rounded-[3rem] shadow-glow-cyan overflow-hidden relative group"
+                        >
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                            <span className="relative z-10 flex items-center justify-center gap-4 text-xl">
+                                <Zap size={32} fill="currentColor" /> Initiate Final_Ascension_Protocol
+                            </span>
+                        </motion.button>
+                    )}
+
+                    {/* Neural Digital Twin Section */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="mb-16"
+                    >
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 md:p-12 backdrop-blur-3xl overflow-hidden relative group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-cosmic-cyan/5 via-transparent to-cosmic-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                            {/* 3D Visualization View */}
+                            <div className="lg:col-span-7 h-[400px] md:h-[500px] relative">
+                                <AnimatePresence mode="wait">
+                                    {dashboardView === 'twin' ? (
+                                        <motion.div
+                                            key="twin"
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 1.1 }}
+                                            className="w-full h-full"
+                                        >
+                                            <NeuralDigitalTwin density={neuralDensity} />
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="palace"
+                                            initial={{ opacity: 0, scale: 1.1 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            className="w-full h-full"
+                                        >
+                                            <MemoryPalace progressData={progressData} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Metadata & Trigger */}
+                            <div className="lg:col-span-5 space-y-8 relative z-10">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cosmic-cyan/10 border border-cosmic-cyan/20 text-cosmic-cyan text-[8px] font-black uppercase tracking-[0.3em]">
+                                            Cognitive Map Verified
+                                        </div>
+                                        <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                                            <button
+                                                onClick={() => setDashboardView('twin')}
+                                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${dashboardView === 'twin' ? 'bg-cosmic-cyan text-black' : 'text-gray-500 hover:text-white'}`}
+                                            >
+                                                Neural_Twin
+                                            </button>
+                                            <button
+                                                onClick={() => setDashboardView('palace')}
+                                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${dashboardView === 'palace' ? 'bg-cosmic-cyan text-black' : 'text-gray-500 hover:text-white'}`}
+                                            >
+                                                Mem_Palace
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <h2 className="text-4xl md:text-5xl font-display font-black text-white tracking-tighter">
+                                        {dashboardView === 'twin' ? 'Neural ' : 'Memory '}
+                                        <span className="text-gradient-cosmic">{dashboardView === 'twin' ? 'Topology' : 'Sanctuary'}</span>
+                                    </h2>
+                                    <p className="text-gray-500 text-lg font-light leading-relaxed">
+                                        {dashboardView === 'twin'
+                                            ? `Your digital twin reflects real-time synaptic density based on mastery across ${Object.keys(neuralDensity).length} specialized sectors.`
+                                            : "Your knowledge is architectural. Each spire represents a mastered domain, glowing brighter as your synaptic density increases."}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {Object.entries(neuralDensity).slice(0, 4).map(([cat, val]) => (
+                                        <div key={cat} className="p-4 bg-white/5 border border-white/5 rounded-2xl">
+                                            <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest mb-2">{cat} sector</div>
+                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${val * 100}%` }}
+                                                    className="h-full bg-cosmic-cyan shadow-glow-cyan"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <ParticleButton
+                                    onClick={() => setIsDeepStudyActive(true)}
+                                    className="w-full py-5 text-sm font-black uppercase tracking-[0.2em] shadow-glow-cyan bg-gradient-to-r from-cosmic-cyan to-cosmic-cyan/80 text-black border-none"
+                                >
+                                    Initialize Deep Study Mode
+                                </ParticleButton>
+                            </div>
+                        </div>
+                    </motion.section>
 
                     {/* Onboarding / "Getting Started" Section */}
                     {hasNoActivity && (
@@ -239,6 +402,18 @@ export default function Dashboard() {
                     </footer>
                 </div>
             </main>
+
+            <AnimatePresence>
+                {isDeepStudyActive && (
+                    <DeepStudyOverlay onClose={() => setIsDeepStudyActive(false)} />
+                )}
+            </AnimatePresence>
+
+            <SingularityProtocol
+                isOpen={isSingularityActive}
+                onClose={() => setIsSingularityActive(false)}
+                userName={user?.name || "Learner"}
+            />
         </div>
     );
 }

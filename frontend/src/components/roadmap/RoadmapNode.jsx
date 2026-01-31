@@ -1,10 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Info, Lock, Activity, RotateCcw } from 'lucide-react';
+import { Check, Info, Lock, Activity, RotateCcw, Sword } from 'lucide-react';
+import { MemoryDecayService } from '../../utils/MemoryDecayService';
 
-const RoadmapNode = ({ node, className = "", onToggle, status = 'DEFAULT', onClick }) => {
+const RoadmapNode = ({ node, className = "", onToggle, status = 'DEFAULT', masteredAt, onClick, isDungeonMode = false, isBoss = false }) => {
     // Status-based Styles
     const getStatusStyles = () => {
+        if (isDungeonMode && isBoss) {
+            return {
+                bg: status === 'MASTERED' ? 'bg-red-500/20' : 'bg-red-950/40',
+                border: status === 'MASTERED' ? 'border-red-500' : 'border-red-900/50',
+                glow: status === 'MASTERED' ? 'shadow-[0_0_50px_rgba(220,38,38,0.4)]' : 'shadow-[0_0_30px_rgba(0,0,0,0.5)]',
+                iconColor: 'text-red-500',
+                textColor: 'text-white font-black italic',
+                icon: <Sword size={16} className={status !== 'MASTERED' ? 'animate-pulse' : ''} />
+            };
+        }
+
         switch (status) {
             case 'MASTERED':
                 return {
@@ -47,6 +59,8 @@ const RoadmapNode = ({ node, className = "", onToggle, status = 'DEFAULT', onCli
     };
 
     const styles = getStatusStyles();
+    const retentionScore = status === 'MASTERED' ? MemoryDecayService.getRetentionScore(masteredAt) : 1.0;
+    const palimpsestStyle = status === 'MASTERED' ? MemoryDecayService.getPalimpsestStyle(retentionScore) : {};
 
     return (
         <motion.div
@@ -58,7 +72,8 @@ const RoadmapNode = ({ node, className = "", onToggle, status = 'DEFAULT', onCli
                 left: node.x,
                 top: node.y,
                 width: 180, // Fixed width for consistency
-                zIndex: 10
+                zIndex: 10,
+                ...palimpsestStyle
             }}
         >
             {/* Glass Card */}
