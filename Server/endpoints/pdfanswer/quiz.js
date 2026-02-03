@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import Quiz from './models/supabase/Quiz.js';
-import { authenticateToken } from './middleware/auth.js';
-import { callGemini } from './utils/gemini.js';
+import Quiz from './models/Quiz.js';
+import { authenticateToken, optionalAuth } from './middleware/auth.js';
+import { callGroq } from './utils/groq.js';
 
 const quizRouter = Router();
 
@@ -10,19 +10,28 @@ const quizRouter = Router();
  */
 function parseLLMJson(text) {
   try {
-    // If it's already clean JSON
+    // 1. Try direct parse
     return JSON.parse(text);
   } catch (e) {
-    // Try to find JSON inside markdown blocks
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (match) {
+    // 2. Try markdown block
+    const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch) {
       try {
-        return JSON.parse(match[1]);
-      } catch (innerE) {
-        throw new Error("Found JSON block but it's malformed: " + innerE.message);
-      }
+        return JSON.parse(markdownMatch[1].trim());
+      } catch (innerE) { }
     }
-    throw e;
+
+    // 3. Try to find first '{' and last '}'
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      try {
+        return JSON.parse(text.substring(startIdx, endIdx + 1));
+      } catch (braceE) { }
+    }
+
+    console.error("❌ JSON Parse Failure. Raw text:", text);
+    throw new Error("Neural response was not in a valid format.");
   }
 }
 
@@ -30,9 +39,9 @@ function parseLLMJson(text) {
  * Generate and save a new quiz
  * @route POST /quiz
  */
-quizRouter.post("/", authenticateToken, async (req, response) => {
+quizRouter.post("/", optionalAuth, async (req, response) => {
   const { prompt, difficulty = 'medium', framework = 'General' } = req.body;
-  const userId = req.user.userId;
+  const userId = req.user?.userId || 'anonymous';
 
   console.log(`[Quiz Request] Topic: "${prompt}", Difficulty: ${difficulty}, Framework: "${framework}"`);
 
@@ -103,12 +112,20 @@ Return ONLY a JSON object with:
     const finalSystemPrompt = systemPrompt + frameworkContext + bossProtocol;
     const finalUserPrompt = `Generate a quiz about: "${prompt}". Difficulty: ${isBossEncounter ? 'EXTREME' : difficulty}. Ensure you follow the UNIVERSAL TOPIC QUIZ ENGINE rules strictly.`;
 
-    const responseText = await callGemini([
-      { role: 'system', content: finalSystemPrompt },
-      { role: 'user', content: finalUserPrompt }
-    ], {
-      response_format: { type: "json_object" }
-    });
+    let responseText;
+    try {
+      // Prioritize Groq for ultra-fast quiz synthesis
+      console.log(`📡 Dispatching Quiz Synthesis to Groq Core...`);
+      responseText = await callGroq([
+        { role: 'system', content: finalSystemPrompt },
+        { role: 'user', content: finalUserPrompt }
+      ], {
+        response_format: { type: "json_object" }
+      });
+    } catch (groqError) {
+      console.error("❌ Groq Quiz Generation failed:", groqError.message);
+      throw new Error(`Neural sync disrupted: AI engine is offline.`);
+    }
 
     const content = parseLLMJson(responseText);
 

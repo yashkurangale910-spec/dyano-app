@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Zap, Book, Map, FileText, X, Bot } from 'lucide-react';
+import { Search, Zap, Book, Map, FileText, X, Bot, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ACTIONS = [
@@ -8,6 +8,7 @@ const ACTIONS = [
     { id: 'flashcards', title: 'Study Flashcards', description: 'Review neural clusters', icon: Book, path: '/flashcards' },
     { id: 'roadmap', title: 'View Roadmap', description: 'Navigate knowledge path', icon: Map, path: '/roadmap' },
     { id: 'pdf', title: 'PDF Lab', description: 'Extract document intelligence', icon: FileText, path: '/pdf' },
+    { id: 'imagine', title: 'Visual Synthesis', description: 'Generate AI imagery', icon: ImageIcon, path: '/imagine' },
     { id: 'chatbot', title: 'Spark.E Tutor', description: '24/7 Vision-aware personal tutor', icon: Bot, path: '/chatbot' },
 ];
 

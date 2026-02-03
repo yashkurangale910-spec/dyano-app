@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import User from '../models/supabase/User.js';
+import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt.js';
 
 /**

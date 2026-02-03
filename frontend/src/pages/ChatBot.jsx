@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import ParticleButton from '../components/ui/ParticleButton';
+import BaseButton from '../components/ui/BaseButton';
 import NeuralOrb from '../components/three/NeuralOrb';
 import useTutor from '../hooks/useTutor';
 
@@ -175,8 +175,20 @@ export default function ChatBot() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, status]);
 
+    const [isLinkActive, setIsLinkActive] = useState(true);
+
     // Fetch Initial Data
     useEffect(() => {
+        const checkConnectivity = async () => {
+            try {
+                await axios.get(`${API_URL}/tutor/ping`);
+                setIsLinkActive(true);
+            } catch (err) {
+                console.error("Neural link heartbeat failed");
+                setIsLinkActive(false);
+            }
+        };
+
         const fetchPdfs = async () => {
             try {
                 const user = JSON.parse(localStorage.getItem('dyano_user') || '{}');
@@ -188,8 +200,13 @@ export default function ChatBot() {
                 console.error("Failed to load PDF context library");
             }
         };
+
+        checkConnectivity();
         fetchPdfs();
         fetchProgress();
+
+        const interval = setInterval(checkConnectivity, 30000); // Check every 30s
+        return () => clearInterval(interval);
     }, [fetchProgress]);
 
     // Sound Effects
@@ -385,11 +402,13 @@ export default function ChatBot() {
             }
         } catch (error) {
             console.error('❌ Chat submission error:', error);
+            playTune('error');
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: `Neural sync disrupted: ${error.message || "Please verify connection to the Dyson swarm."}`,
                 isError: true,
-                timestamp: new Date()
+                timestamp: new Date(),
+                retryAction: true
             }]);
         }
     };
@@ -426,6 +445,13 @@ export default function ChatBot() {
         }
     };
 
+    const handleRetry = (idx) => {
+        // Simple retry: just clear the error message and let the user try again
+        setMessages(prev => prev.filter((_, i) => i !== idx));
+        // If it was the last message, we could automatically resubmit, 
+        // but it's safer to let the user review and click send again.
+    };
+
     return (
         <div className="fixed inset-0 z-20 flex bg-[#05010d] overflow-hidden">
             {/* Atmospheric Background */}
@@ -440,7 +466,7 @@ export default function ChatBot() {
                     transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
                     className={`absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] blur-[160px] rounded-full bg-${PERSONALITY_THEMES[personality]?.secondary || 'cosmic-cyan'}`}
                 />
-                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '100px 100px' }} />
+                {/* <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '100px 100px' }} /> */}
             </div>
 
             {/* Sidebar */}
@@ -682,6 +708,18 @@ export default function ChatBot() {
                                                             </div>
                                                         </div>
                                                     )}
+
+                                                    {/* RETRY ACTION */}
+                                                    {msg.isError && (
+                                                        <div className="mt-4 flex gap-3">
+                                                            <button
+                                                                onClick={() => handleRetry(idx)}
+                                                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-[9px] font-black text-red-400 uppercase tracking-widest transition-all"
+                                                            >
+                                                                <RefreshCw size={10} /> Recalibrate Link
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="mt-2 text-[8px] uppercase tracking-widest text-gray-600 font-bold px-3">
                                                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} // NODE-{idx.toString().padStart(3, '0')}
@@ -714,9 +752,9 @@ export default function ChatBot() {
                                                 placeholder="Paste essay here..."
                                                 className="w-full h-[400px] bg-white/5 border border-white/10 rounded-3xl p-8 text-white placeholder:text-gray-700 focus:outline-none focus:border-cosmic-pink transition-all resize-none shadow-inner"
                                             />
-                                            <ParticleButton onClick={handleEssaySubmit} disabled={!essayText || status === 'loading'} className="w-full py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-bold">
+                                            <BaseButton variant="primary" onClick={handleEssaySubmit} disabled={!essayText || status === 'loading'} className="w-full py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-bold">
                                                 {status === 'loading' ? 'Grading...' : 'Start Neural Grading'}
-                                            </ParticleButton>
+                                            </BaseButton>
                                         </div>
                                     ) : (
                                         <div className="space-y-8 py-10">
@@ -748,9 +786,9 @@ export default function ChatBot() {
                                                 placeholder="Enter problem here..."
                                                 className="w-full h-[300px] bg-white/5 border border-white/10 rounded-3xl p-8 text-white placeholder:text-gray-700 focus:outline-none focus:border-cosmic-purple transition-all resize-none shadow-inner font-mono"
                                             />
-                                            <ParticleButton onClick={handleSolverSubmit} disabled={!problemText || status === 'loading'} className="w-full py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-bold">
+                                            <BaseButton variant="primary" onClick={handleSolverSubmit} disabled={!problemText || status === 'loading'} className="w-full py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-bold">
                                                 {status === 'loading' ? 'Solving...' : 'Initiate Derivation'}
-                                            </ParticleButton>
+                                            </BaseButton>
                                         </div>
                                     ) : (
                                         <div className="space-y-6 py-10">
@@ -796,7 +834,7 @@ export default function ChatBot() {
                                         <button
                                             key={i}
                                             onClick={chip.action}
-                                            className={`px-3 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all ${chip.active ? 'bg-cosmic-cyan/20 border-cosmic-cyan/40 text-cosmic-cyan' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:border-white/20'}`}
+                                            className={`px-3 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all ${chip.active ? 'bg-cosmic-cyan/20 border-cosmic-cyan/40 text-cosmic-cyan' : 'bg-white/10 border-white/20 text-gray-300 hover:text-white hover:border-white/40'}`}
                                         >
                                             {chip.label}
                                         </button>
@@ -814,13 +852,14 @@ export default function ChatBot() {
                             )}
 
                             <form onSubmit={handleChatSubmit} className="flex gap-4">
-                                <div className="flex-1 relative group bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] focus-within:border-cosmic-cyan/40 focus-within:bg-white/[0.06] transition-all duration-300 flex items-center pr-36 shadow-2xl overflow-hidden">
+                                <div className="flex-1 relative group bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] focus-within:border-cosmic-cyan/60 focus-within:bg-white/[0.08] focus-within:ring-2 focus-within:ring-cosmic-cyan/20 transition-all duration-300 flex items-center pr-36 shadow-2xl overflow-hidden">
                                     <input
+                                        autoFocus
                                         type="text"
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         placeholder="Command Spark.E..."
-                                        className="flex-1 bg-transparent border-none py-6 px-8 text-white text-[14px] focus:outline-none placeholder:text-gray-600 relative z-10"
+                                        className="flex-1 bg-transparent border-none py-6 px-8 text-white text-[14px] focus:outline-none placeholder:text-gray-500 relative z-10"
                                     />
                                     <div className="absolute right-4 flex items-center gap-4 text-gray-500 z-10">
                                         <button type="button" onClick={toggleVoice} title="Neural Recognition" className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${listening ? 'bg-cosmic-cyan/20 text-cosmic-cyan shadow-glow-cyan' : 'hover:bg-white/5 hover:text-white'}`}><Mic size={18} /></button>
@@ -829,9 +868,9 @@ export default function ChatBot() {
                                     </div>
                                     <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                                 </div>
-                                <ParticleButton type="submit" variant={personality} disabled={status === 'loading' || (!input.trim() && !image)} className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${(!input.trim() && !image) ? 'grayscale opacity-30 cursor-not-allowed' : 'opacity-100 hover:scale-[1.02] active:scale-95 shadow-lg shadow-cosmic-cyan/20'}`}>
-                                    {status === 'loading' ? <Loader2 className="animate-spin text-black" size={24} /> : <Send size={24} className="text-black" />}
-                                </ParticleButton>
+                                <BaseButton type="submit" variant="primary" disabled={status === 'loading' || (!input.trim() && !image)} className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${(!input.trim() && !image) ? 'grayscale opacity-30 cursor-not-allowed' : 'opacity-100 hover:scale-[1.02] active:scale-95 shadow-lg shadow-accent-cyan/20'}`}>
+                                    {status === 'loading' ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
+                                </BaseButton>
                             </form>
                         </div>
                     </div>

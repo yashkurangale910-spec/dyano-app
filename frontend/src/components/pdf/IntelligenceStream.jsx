@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, User, Sparkles, Send } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import GlassCard from '../ui/GlassCard';
+import LuxuryCard, { LuxuryContent } from '../ui/LuxuryCard';
 
 export default function IntelligenceStream({ messages, onSend, isProcessing }) {
     const [input, setInput] = useState('');
@@ -47,19 +47,21 @@ export default function IntelligenceStream({ messages, onSend, isProcessing }) {
                                             <User size={16} />}
                                 </div>
 
-                                <GlassCard className={`
-                                    py-3 px-5 rounded-2xl
+                                <LuxuryCard variant="glass" className={`
+                                    rounded-2xl
                                     ${msg.role === 'user' ? 'bg-white/5 border-white/10' : 'bg-cosmic-deep/40'}
                                 `}>
-                                    {msg.role === 'system' && (
-                                        <span className="text-[10px] font-mono tracking-widest text-gray-500 uppercase block mb-1">
-                                            System_Log //
-                                        </span>
-                                    )}
-                                    <p className={`text-sm leading-relaxed ${msg.role === 'system' ? 'font-mono text-gray-500' : 'text-gray-300'}`}>
-                                        {msg.content}
-                                    </p>
-                                </GlassCard>
+                                    <LuxuryContent className="py-3 px-5">
+                                        {msg.role === 'system' && (
+                                            <span className="text-[10px] font-mono tracking-widest text-gray-500 uppercase block mb-1">
+                                                System_Log //
+                                            </span>
+                                        )}
+                                        <p className={`text-sm leading-relaxed ${msg.role === 'system' ? 'font-mono text-gray-500' : 'text-gray-300'}`}>
+                                            {msg.content}
+                                        </p>
+                                    </LuxuryContent>
+                                </LuxuryCard>
                             </div>
                         </motion.div>
                     ))}

@@ -1,20 +1,35 @@
 import { Router } from 'express';
-import FlashcardSet from './models/supabase/FlashcardSet.js';
+import FlashcardSet from './models/FlashcardSet.js';
 import { authenticateToken } from './middleware/auth.js';
-import { callGemini } from './utils/gemini.js';
+import { callGroq } from './utils/groq.js';
 import { calculateNextReview, getDueCards, getStudyStats } from './utils/spacedRepetition.js';
 
 const flashcardsRouter = Router();
 
 function parseLLMJson(text) {
-    try { return JSON.parse(text); }
-    catch (e) {
-        const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (match) {
-            try { return JSON.parse(match[1]); }
-            catch (innerE) { throw new Error("Malformed JSON block: " + innerE.message); }
+    try {
+        // 1. Try direct parse
+        return JSON.parse(text);
+    } catch (e) {
+        // 2. Try markdown block
+        const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (markdownMatch) {
+            try {
+                return JSON.parse(markdownMatch[1].trim());
+            } catch (innerE) { }
         }
-        throw e;
+
+        // 3. Try to find first '{' and last '}'
+        const startIdx = text.indexOf('{');
+        const endIdx = text.lastIndexOf('}');
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+            try {
+                return JSON.parse(text.substring(startIdx, endIdx + 1));
+            } catch (braceE) { }
+        }
+
+        console.error("❌ Flashcard JSON Parse Failure. Raw text:", text);
+        throw new Error("Neural response was not in a valid format.");
     }
 }
 
@@ -27,18 +42,25 @@ flashcardsRouter.post("/", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
 
     try {
-        const responseText = await callGemini([
-            {
-                role: 'system',
-                content: 'You are a study aid generator. Return only a JSON object with a "flashcards" key containing an array of objects. Each object must have "front" (a term or question) and "back" (a concise definition or answer).'
-            },
-            {
-                role: 'user',
-                content: `Generate 8-10 flashcards for the following topic/text: ${prompt}`
-            }
-        ], {
-            response_format: { type: "json_object" }
-        });
+        const systemMsg = {
+            role: 'system',
+            content: 'You are a study aid generator. Return only a JSON object with a "flashcards" key containing an array of objects. Each object must have "front" (a term or question) and "back" (a concise definition or answer). Do not include any conversational text.'
+        };
+        const userMsg = {
+            role: 'user',
+            content: `Generate 8-10 flashcards for the following topic/text: ${prompt}`
+        };
+
+        let responseText;
+        try {
+            console.log(`📡 Synthesizing Synaptic Pods via Groq Core...`);
+            responseText = await callGroq([systemMsg, userMsg], {
+                response_format: { type: "json_object" }
+            });
+        } catch (groqError) {
+            console.error("❌ Groq Flashcard Synthesis failed:", groqError.message);
+            throw new Error(`Neural sync disrupted: AI engine is offline.`);
+        }
 
         const content = parseLLMJson(responseText);
         const cardsList = content.flashcards || content.cards || content;

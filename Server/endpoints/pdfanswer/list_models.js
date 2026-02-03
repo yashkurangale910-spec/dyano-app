@@ -1,7 +1,17 @@
-import fs from 'fs';
-const apiKey = 'AIzaSyAu_oU789M8H5jDL4s_Wia833DFN4oezpM';
-const url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' + apiKey;
-const res = await fetch(url);
-const data = await res.json();
-fs.writeFileSync('models.json', JSON.stringify(data, null, 2));
-console.log('DONE');
+import fetch from 'node-fetch';
+const apiKey = 'AIzaSyBq3siHB7tr1_rzncFzDUgtAiErNsLwvaQ';
+async function test() {
+    const url = `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.models) {
+            console.log('Available Models:', data.models.map(m => m.name).join(', '));
+        } else {
+            console.log('Error Listing Models:', JSON.stringify(data, null, 2));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+test();

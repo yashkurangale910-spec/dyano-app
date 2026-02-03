@@ -7,48 +7,48 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Cosmic Palette
-                cosmic: {
-                    void: '#0a0118',
-                    deep: '#1a0b2e',
-                    nebula: '#2d1b4e',
-                    purple: '#7b2cbf',
-                    pink: '#e0aaff',
-                    cyan: '#00f5ff',
-                    gold: '#ffd60a',
-                },
-                glass: {
-                    light: 'rgba(255, 255, 255, 0.1)',
-                    medium: 'rgba(255, 255, 255, 0.05)',
-                    dark: 'rgba(0, 0, 0, 0.2)',
-                }
+                // Ultra-Premium SaaS Palette
+                'bg-main': 'var(--bg-main)',
+                'bg-surface': 'var(--bg-surface)',
+                'bg-surface-light': 'var(--bg-surface-light)',
+                'accent-cyan': 'var(--accent-cyan)',
+                'accent-indigo': 'var(--accent-indigo)',
+                'text-primary': 'var(--text-primary)',
+                'text-secondary': 'var(--text-secondary)',
+                'text-muted': 'var(--text-muted)',
+                'border-subtle': 'var(--border-subtle)',
+                'border-medium': 'var(--border-medium)',
+
+                // Legacy cosmic colors (for backward compatibility)
+                'cosmic-void': 'var(--cosmic-void)',
+                'cosmic-deep': 'var(--cosmic-deep)',
+                'cosmic-nebula': 'var(--cosmic-nebula)',
+                'cosmic-purple': 'var(--cosmic-purple)',
+                'cosmic-pink': 'var(--cosmic-pink)',
+                'cosmic-cyan': 'var(--cosmic-cyan)',
+                'cosmic-gold': 'var(--cosmic-gold)',
             },
             fontFamily: {
-                display: ['Space Grotesk', 'sans-serif'],
-                body: ['Outfit', 'sans-serif'],
+                header: ['var(--font-header)', 'sans-serif'],
+                body: ['var(--font-body)', 'sans-serif'],
             },
             animation: {
                 'float': 'float 6s ease-in-out infinite',
+                'spin-slow': 'spin 8s linear infinite',
                 'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                'glow': 'glow 2s ease-in-out infinite',
-                'orbit': 'orbit 20s linear infinite',
             },
             keyframes: {
                 float: {
-                    '0%, 100%': { transform: 'translateY(0px)' },
-                    '50%': { transform: 'translateY(-20px)' },
-                },
-                glow: {
-                    '0%, 100%': { opacity: '1', filter: 'brightness(1)' },
-                    '50%': { opacity: '0.8', filter: 'brightness(1.2)' },
-                },
-                orbit: {
-                    '0%': { transform: 'rotate(0deg)' },
-                    '100%': { transform: 'rotate(360deg)' },
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-10px)' },
                 }
             },
-            backdropBlur: {
-                xs: '2px',
+            boxShadow: {
+                'glow-cyan': '0 0 20px rgba(0, 245, 255, 0.15)',
+                'glow-indigo': '0 0 20px rgba(99, 102, 241, 0.15)',
+                // Legacy glow variants
+                'glow-purple': '0 0 30px rgba(123, 44, 191, 0.3)',
+                'glow-pink': '0 0 30px rgba(224, 170, 255, 0.3)',
             }
         },
     },

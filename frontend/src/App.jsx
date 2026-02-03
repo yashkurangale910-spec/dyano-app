@@ -18,16 +18,22 @@ const Roadmap = lazy(() => import('./pages/Roadmap'));
 const ChatBot = lazy(() => import('./pages/ChatBot'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ImageGen = lazy(() => import('./pages/ImageGen'));
+
+import LoadingState from './components/ui/LoadingState';
+import NeuralCursor from './components/ui/NeuralCursor';
+import { AtmosphericProvider } from './context/AtmosphericContext';
 
 const queryClient = new QueryClient();
 
 function LoadingScreen() {
   return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="text-center animate-pulse">
-        <div className="text-4xl mb-4 text-cosmic-cyan">🌌</div>
-        <div className="text-xs uppercase tracking-[0.4em] font-display text-white/40">Synchronizing...</div>
-      </div>
+    <div className="h-screen w-full flex-center bg-bg-main">
+      <LoadingState
+        variant="spinner"
+        label="Initializing Dyano"
+        message="Establishing secure neural uplink to the cognitive archive..."
+      />
     </div>
   );
 }
@@ -38,27 +44,31 @@ function App() {
       <AuthProvider>
         <Router>
           <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              <Route path="/chatbot" element={<ChatBot />} />
-
-              <Route element={<LayoutShell />}>
-                {/* Public Routes */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-
-                {/* All Routes - No Authentication Required */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/quiz" element={<QuizLab />} />
-                <Route path="/flashcards" element={<FlashcardSpace />} />
-                <Route path="/pdf" element={<PDFLab />} />
-                <Route path="/progress" element={<ProgressJourney />} />
-                <Route path="/roadmap" element={<Roadmap />} />
+            <AtmosphericProvider>
+              <Routes>
                 <Route path="/chatbot" element={<ChatBot />} />
-              </Route>
-            </Routes>
+
+                <Route element={<LayoutShell />}>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+
+                  {/* All Routes - No Authentication Required */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/quiz" element={<QuizLab />} />
+                  <Route path="/flashcards" element={<FlashcardSpace />} />
+                  <Route path="/pdf" element={<PDFLab />} />
+                  <Route path="/progress" element={<ProgressJourney />} />
+                  <Route path="/roadmap" element={<Roadmap />} />
+                  <Route path="/imagine" element={<ImageGen />} />
+                  <Route path="/chatbot" element={<ChatBot />} />
+                </Route>
+              </Routes>
+            </AtmosphericProvider>
           </Suspense>
           <Toaster position="top-right" />
+          <NeuralCursor />
         </Router>
       </AuthProvider>
     </QueryClientProvider>

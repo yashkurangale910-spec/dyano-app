@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { authenticateToken, optionalAuth } from './middleware/auth.js';
-import { callGemini } from './utils/gemini.js';
+import { callGroq } from './utils/groq.js';
 import fs from 'fs';
 import os from 'os';
 import TutorSession from './models/TutorSession.js';
@@ -10,6 +10,13 @@ import PDFDocument from './models/PDFDocument.js';
 import { RagService } from './utils/RagService.js';
 
 const router = Router();
+
+/**
+ * Diagnostic ping for tutor service
+ */
+router.get('/ping', (req, res) => {
+    res.json({ success: true, timestamp: new Date(), status: 'active' });
+});
 
 // Configure multer for image uploads
 const storage = multer.memoryStorage();
@@ -308,7 +315,7 @@ router.post('/chat', optionalAuth, upload.single('image'), async (req, res) => {
         const userId = req.user?.userId || 'anonymous';
 
         // ... (validation logic)
-        const validatedDepth = depthMap[depth] || (['brief', 'standard', 'detailed', 'comprehensive'].includes(depth) ? depth : 'standard');
+        const validatedDepth = (['brief', 'standard', 'detailed', 'comprehensive'].includes(depth) ? depth : 'standard');
         const validatedPersonality = PERSONALITIES[personality] ? personality : 'friendly';
 
         const image = req.file;
@@ -425,18 +432,42 @@ Do not mix languages. If the user asks in a specific language, stick to it 100%.
             });
         }
 
-        // Get Gemini response (Faster & Free)
+        // High-Speed Link: Groq Synaptic Bridge (Primary & Sole Engine)
         let aiResult = {};
         try {
-            const responseText = await callGemini(messages, {
+            console.log(`📡 Linking to Groq synaptic bridge... (Personality: ${personality})`);
+            const groqResponse = await callGroq(messages, {
                 max_tokens: depth === 'comprehensive' ? 2000 : depth === 'detailed' ? 1500 : 1000,
                 temperature: personality === 'strict' ? 0.2 : 0.7,
                 response_format: { type: 'json_object' }
             });
-            aiResult = JSON.parse(responseText);
-        } catch (geminiError) {
-            console.error('❌ Gemini Error:', geminiError.message);
-            throw new Error(`Neural sync disrupted: ${geminiError.message}`);
+
+            console.log(`✅ Synapse Recieved from Groq Core.`);
+            try {
+                aiResult = JSON.parse(groqResponse);
+            } catch (parseError) {
+                console.warn('⚠️ Groq JSON Parse Failed, trying extraction...');
+                // Fallback extraction
+                const startIdx = groqResponse.indexOf('{');
+                const endIdx = groqResponse.lastIndexOf('}');
+                if (startIdx !== -1 && endIdx !== -1) {
+                    try {
+                        aiResult = JSON.parse(groqResponse.substring(startIdx, endIdx + 1));
+                    } catch (e) {
+                        aiResult = { response: groqResponse, citations: [] };
+                    }
+                } else {
+                    aiResult = { response: groqResponse, citations: [] };
+                }
+            }
+        } catch (groqError) {
+            console.error('❌ Groq Engine failure:', groqError.message);
+            // DO NOT throw, return a friendly error in JSON
+            return res.status(200).json({
+                success: false,
+                message: `Neural sync disrupted: ${groqError.message}`,
+                errorType: 'AI_ENGINE_OFFLINE'
+            });
         }
 
         // Save to session

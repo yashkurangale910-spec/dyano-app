@@ -1,6 +1,9 @@
 import { execSync } from 'child_process';
+import { config } from 'dotenv';
 
-const PORT = 3005;
+config();
+const PORT = process.env.PORT || 3006;
+
 
 try {
     console.log(`🔍 Checking for processes on port ${PORT}...`);
@@ -19,21 +22,28 @@ try {
     if (output) {
         console.log(`🧟 Found existing processes. Terminating...`);
         const lines = output.trim().split('\n');
+        let killedCount = 0;
 
         lines.forEach(line => {
             const parts = line.trim().split(/\s+/);
             const pid = process.platform === 'win32' ? parts[parts.length - 1] : parts[0];
 
-            if (pid && pid !== process.pid.toString()) {
+            // Validate PID is a number and not the current process
+            if (pid && !isNaN(pid) && parseInt(pid) > 0 && pid !== process.pid.toString()) {
                 console.log(`💀 Killing PID: ${pid}`);
                 try {
-                    process.kill(pid, 'SIGKILL');
+                    if (process.platform === 'win32') {
+                        execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore' });
+                    } else {
+                        process.kill(pid, 'SIGKILL');
+                    }
+                    killedCount++;
                 } catch (e) {
-                    // Might already be dead
+                    console.log(`⚠️ Could not kill PID ${pid}: ${e.message}`);
                 }
             }
         });
-        console.log(`✅ Port ${PORT} cleared.`);
+        console.log(`✅ Port ${PORT} cleared. Killed ${killedCount} process(es).`);
     } else {
         console.log(`✨ Port ${PORT} is already clear.`);
     }

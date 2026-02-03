@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import useProgress from '../hooks/useProgress';
+import { LEARNING_TOOLS, RECENT_ACTIVITY } from '../constants/landingContent';
 import {
     Flame,
     Star,
@@ -26,17 +27,21 @@ import {
 
 import { Canvas } from '@react-three/fiber';
 import KnowledgeUniverse from '../components/three/KnowledgeUniverse';
-import GlassCard from '../components/ui/GlassCard';
-import ParticleButton from '../components/ui/ParticleButton';
-import DashboardStats from '../components/dashboard/DashboardStats';
-import ActivityFeed from '../components/dashboard/ActivityFeed';
-import Tooltip from '../components/ui/Tooltip';
+import LuxuryCard, { LuxuryContent } from '../components/ui/LuxuryCard';
+import PageHeader from '../components/ui/PageHeader';
+import Breadcrumbs from '../components/ui/Breadcrumbs';
+import { ProgressBar } from '../components/ui/ProgressIndicator';
 
+import LoadingState from '../components/ui/LoadingState';
+import NeuralSkeleton from '../components/ui/NeuralSkeleton';
 import KnowledgeBadge from '../components/dashboard/KnowledgeBadge';
 import NeuralDigitalTwin from '../components/dashboard/NeuralDigitalTwin';
 import MemoryPalace from '../components/dashboard/MemoryPalace';
 import DeepStudyOverlay from '../components/ui/DeepStudyOverlay';
 import SingularityProtocol from '../components/special/SingularityProtocol';
+import ActivityFeed from '../components/dashboard/ActivityFeed';
+import BaseButton from '../components/ui/BaseButton';
+import DashboardStats from '../components/dashboard/DashboardStats';
 
 export default function Dashboard() {
     const { t } = useTranslation();
@@ -47,147 +52,97 @@ export default function Dashboard() {
     const [dashboardView, setDashboardView] = useState('twin'); // 'twin' or 'palace'
     const [isSingularityActive, setIsSingularityActive] = useState(false);
 
-    // ... stats logic ...
+    // stats logic - Minimalist Pivot
     const stats = (progressData && progressData.progress) ? [
-        { id: 'streak', label: t('dashboard.stats.uptime'), value: `${progressData.progress.dailyStreak?.count || 0} Days`, Icon: Flame, color: 'text-cosmic-gold', glow: 'gold', path: '/progress' },
-        { id: 'xp', label: 'Neural XP', value: `${progressData.progress.stats?.totalXP || 0} / ${((progressData.progress.stats?.level || 1) * 1000)}`, Icon: Zap, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
-        { id: 'level', label: 'Symmetry Level', value: `LVL ${progressData.progress.stats?.level || 1}`, Icon: Rocket, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
-        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '94%', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple', path: '/progress' }
+        { id: 'streak', label: t('dashboard.stats.uptime'), value: `${progressData.progress.dailyStreak?.count || 0} Days`, Icon: Flame, color: 'text-white/60', glow: 'gray', path: '/progress' },
+        { id: 'xp', label: 'Neural XP', value: `${progressData.progress.stats?.totalXP || 0} / ${((progressData.progress.stats?.level || 1) * 1000)}`, Icon: Zap, color: 'text-white/60', glow: 'gray', path: '/progress' },
+        { id: 'level', label: 'Symmetry Level', value: `LVL ${progressData.progress.stats?.level || 1}`, Icon: Rocket, color: 'text-white/60', glow: 'gray', path: '/progress' },
+        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '94%', Icon: TrendingUp, color: 'text-white/60', glow: 'gray', path: '/progress' }
     ] : [
-        { id: 'streak', label: t('dashboard.stats.uptime'), value: '0 Days', Icon: Flame, color: 'text-cosmic-gold', glow: 'gold', path: '/progress' },
-        { id: 'xp', label: 'Neural XP', value: '0 / 1000', Icon: Zap, color: 'text-cosmic-cyan', glow: 'cyan', path: '/progress' },
-        { id: 'level', label: 'Symmetry Level', value: 'LVL 1', Icon: Rocket, color: 'text-cosmic-pink', glow: 'pink', path: '/progress' },
-        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '--', Icon: TrendingUp, color: 'text-cosmic-purple', glow: 'purple', path: '/progress' }
+        { id: 'streak', label: t('dashboard.stats.uptime'), value: '0 Days', Icon: Flame, color: 'text-white/40', glow: 'gray', path: '/progress' },
+        { id: 'xp', label: 'Neural XP', value: '0 / 1000', Icon: Zap, color: 'text-white/40', glow: 'gray', path: '/progress' },
+        { id: 'level', label: 'Symmetry Level', value: 'LVL 1', Icon: Rocket, color: 'text-white/40', glow: 'gray', path: '/progress' },
+        { id: 'efficiency', label: t('dashboard.stats.efficiency'), value: '--', Icon: TrendingUp, color: 'text-white/40', glow: 'gray', path: '/progress' }
     ];
 
     const hasNoActivity = !progressData || (progressData.progress?.stats?.totalQuizzesTaken === 0 && progressData.progress?.stats?.totalRoadmapsCompleted === 0);
-
-    const xpPercentage = progressData ? ((progressData.progress.stats?.totalXP % 1000) / 10).toString() : '0';
+    const xpPercentage = progressData ? ((progressData.progress.stats?.totalXP % 1000) / 10) : 0;
 
     return (
         <div className="w-full relative min-h-screen">
-            {/* Cinematic Background */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
-                <Canvas camera={{ position: [0, 0, 20] }}>
-                    <KnowledgeUniverse count={2000} />
-                </Canvas>
-            </div>
-
             <main className="py-20 relative z-10">
-                <div className="container-cosmic">
-                    {/* Header */}
-                    <header className="mb-20">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                            <div>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cosmic-cyan/10 border border-cosmic-cyan/20 text-cosmic-cyan text-[8px] font-bold uppercase tracking-[0.3em] mb-4"
+                <div className="container-monolith">
+                    {/* Navigation Context */}
+                    <Breadcrumbs />
+
+                    {/* Enhanced Page Header */}
+                    <PageHeader
+                        title="Command Center"
+                        subtitle={`Synchronization stable for ${user?.name || 'Explorer'}. Advanced cognitive metrics active.`}
+                        helpText="Access core modules and monitor neural topology from this interface."
+                        actions={
+                            <div className="hidden md:flex gap-4">
+                                <BaseButton
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => navigate('/progress')}
+                                    leftIcon={<Star size={14} />}
                                 >
-                                    <Activity size={10} className="animate-pulse" /> Unified Neural Interface Active
-                                </motion.div>
-                                <motion.h1
-                                    initial={{ opacity: 0, x: -30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="text-6xl md:text-7xl font-display font-black text-white tracking-tighter mb-4"
+                                    Archives
+                                </BaseButton>
+                                <BaseButton
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => setIsDeepStudyActive(true)}
                                 >
-                                    Command <span className="text-gradient-cosmic">Center</span>
-                                </motion.h1>
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="text-gray-500 text-xl font-light tracking-wide max-w-xl"
-                                >
-                                    Welcome back, {user?.name || 'Explorer'}. Neural synchronization is at {xpPercentage}% for Level {progressData?.progress.stats?.level || 1}.
-                                </motion.p>
+                                    Initialize Deep Study
+                                </BaseButton>
                             </div>
+                        }
+                    />
 
-                            {/* XP Progress Bar */}
-                            <div className="md:w-72 bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Neural Sync</span>
-                                    <span className="text-[10px] font-bold text-cosmic-cyan">{xpPercentage}%</span>
-                                </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${xpPercentage}%` }}
-                                        className="h-full bg-gradient-to-r from-cosmic-cyan to-cosmic-purple shadow-glow-cyan"
-                                    />
-                                </div>
-                            </div>
+                    {/* XP Progress Integration - Minimalist */}
+                    <div className="mb-16 max-w-md">
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">Neural Sync Status</span>
+                            <span className="text-[10px] font-mono font-black text-white/60">Level {progressData?.progress.stats?.level || 1} • {Math.round(xpPercentage)}%</span>
                         </div>
-                    </header>
+                        <ProgressBar
+                            value={xpPercentage}
+                            max={100}
+                            size="md"
+                            className="bg-white/5"
+                        />
+                    </div>
 
-                    {/* Stats Section */}
-                    {stats && <DashboardStats stats={stats} />}
-
-                    {/* Knowledge Vault (Badges) */}
-                    <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="mb-16"
-                    >
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-600">Knowledge Vault</h2>
-                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+                    {/* Stats Section or Skeleton */}
+                    {!progressData ? (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-20">
+                            <NeuralSkeleton count={4} className="h-32" />
                         </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                            {(progressData?.progress?.achievements || []).map((achievement, idx) => (
-                                <KnowledgeBadge
-                                    key={idx}
-                                    id={achievement.name}
-                                    unlocked={true}
-                                    unlockedAt={achievement.unlockedAt}
-                                />
-                            ))}
-                            {/* Placeholders for locked badges */}
-                            {Array.from({ length: Math.max(0, 6 - (progressData?.progress?.achievements?.length || 0)) }).map((_, i) => (
-                                <KnowledgeBadge key={`locked-${i}`} unlocked={false} />
-                            ))}
+                    ) : (
+                        <div className="mb-20">
+                            <DashboardStats stats={stats} />
                         </div>
-                    </motion.section>
-
-                    {/* Singularity Trigger (Phase 12) - Visible only if density is high */}
-                    {neuralDensity >= 0.9 && (
-                        <motion.button
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setIsSingularityActive(true)}
-                            className="w-full mb-12 p-8 bg-gradient-to-r from-cosmic-cyan via-cosmic-purple to-cosmic-cyan bg-[length:200%_auto] animate-gradient text-black font-black uppercase tracking-[0.5em] rounded-[3rem] shadow-glow-cyan overflow-hidden relative group"
-                        >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                            <span className="relative z-10 flex items-center justify-center gap-4 text-xl">
-                                <Zap size={32} fill="currentColor" /> Initiate Final_Ascension_Protocol
-                            </span>
-                        </motion.button>
                     )}
 
-                    {/* Neural Digital Twin Section */}
+                    {/* Neural Interface Section - High Density Bento */}
                     <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="mb-16"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                        className="mb-24"
                     >
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 md:p-12 backdrop-blur-3xl overflow-hidden relative group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-cosmic-cyan/5 via-transparent to-cosmic-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-                            {/* 3D Visualization View */}
-                            <div className="lg:col-span-7 h-[400px] md:h-[500px] relative">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 glass-premium rounded-[3rem] p-8 md:p-12 overflow-hidden relative group border-white/5">
+                            <div className="lg:col-span-8 h-[450px] relative order-2 lg:order-1">
                                 <AnimatePresence mode="wait">
                                     {dashboardView === 'twin' ? (
                                         <motion.div
                                             key="twin"
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 1.1 }}
+                                            initial={{ opacity: 0, filter: 'blur(10px)' }}
+                                            animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                            exit={{ opacity: 0, filter: 'blur(10px)' }}
                                             className="w-full h-full"
                                         >
                                             <NeuralDigitalTwin density={neuralDensity} />
@@ -195,9 +150,9 @@ export default function Dashboard() {
                                     ) : (
                                         <motion.div
                                             key="palace"
-                                            initial={{ opacity: 0, scale: 1.1 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            initial={{ opacity: 0, filter: 'blur(10px)' }}
+                                            animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                            exit={{ opacity: 0, filter: 'blur(10px)' }}
                                             className="w-full h-full"
                                         >
                                             <MemoryPalace progressData={progressData} />
@@ -206,199 +161,136 @@ export default function Dashboard() {
                                 </AnimatePresence>
                             </div>
 
-                            {/* Metadata & Trigger */}
-                            <div className="lg:col-span-5 space-y-8 relative z-10">
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cosmic-cyan/10 border border-cosmic-cyan/20 text-cosmic-cyan text-[8px] font-black uppercase tracking-[0.3em]">
-                                            Cognitive Map Verified
-                                        </div>
-                                        <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                            <div className="lg:col-span-4 space-y-10 order-1 lg:order-2">
+                                <div className="space-y-6">
+                                    <div className="flex flex-col gap-6">
+                                        <span className="text-[10px] font-black tracking-[0.6em] text-white/20 uppercase">System_View</span>
+                                        <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
                                             <button
                                                 onClick={() => setDashboardView('twin')}
-                                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${dashboardView === 'twin' ? 'bg-cosmic-cyan text-black' : 'text-gray-500 hover:text-white'}`}
+                                                className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${dashboardView === 'twin' ? 'bg-white text-black' : 'text-white/30 hover:text-white'}`}
                                             >
-                                                Neural_Twin
+                                                Topology
                                             </button>
                                             <button
                                                 onClick={() => setDashboardView('palace')}
-                                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${dashboardView === 'palace' ? 'bg-cosmic-cyan text-black' : 'text-gray-500 hover:text-white'}`}
+                                                className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${dashboardView === 'palace' ? 'bg-white text-black' : 'text-white/30 hover:text-white'}`}
                                             >
-                                                Mem_Palace
+                                                Sanctuary
                                             </button>
                                         </div>
                                     </div>
-                                    <h2 className="text-4xl md:text-5xl font-display font-black text-white tracking-tighter">
-                                        {dashboardView === 'twin' ? 'Neural ' : 'Memory '}
-                                        <span className="text-gradient-cosmic">{dashboardView === 'twin' ? 'Topology' : 'Sanctuary'}</span>
+
+                                    <h2 className="text-h2 font-black text-white tracking-tighter">
+                                        Neural <br />
+                                        <span className="text-white/40">{dashboardView === 'twin' ? 'Topology' : 'Sanctuary'}</span>
                                     </h2>
-                                    <p className="text-gray-500 text-lg font-light leading-relaxed">
+
+                                    <p className="text-body text-white/50 leading-relaxed font-light">
                                         {dashboardView === 'twin'
-                                            ? `Your digital twin reflects real-time synaptic density based on mastery across ${Object.keys(neuralDensity).length} specialized sectors.`
-                                            : "Your knowledge is architectural. Each spire represents a mastered domain, glowing brighter as your synaptic density increases."}
+                                            ? `Visualizing synaptic density across ${Object.keys(neuralDensity).length} sectors. Digital twin remains synchronized.`
+                                            : "A spatial representation of acquired knowledge. Spires evolve with deep integration."}
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    {Object.entries(neuralDensity).slice(0, 4).map(([cat, val]) => (
-                                        <div key={cat} className="p-4 bg-white/5 border border-white/5 rounded-2xl">
-                                            <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest mb-2">{cat} sector</div>
-                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${val * 100}%` }}
-                                                    className="h-full bg-cosmic-cyan shadow-glow-cyan"
-                                                />
+                                <div className="space-y-4">
+                                    {Object.entries(neuralDensity).slice(0, 3).map(([cat, val]) => (
+                                        <div key={cat} className="space-y-2">
+                                            <div className="flex justify-between text-[9px] font-mono text-white/30 uppercase tracking-widest">
+                                                <span>{cat}</span>
+                                                <span>{Math.round(val * 100)}%</span>
                                             </div>
+                                            <ProgressBar value={val * 100} size="xs" className="bg-white/[0.02]" />
                                         </div>
                                     ))}
                                 </div>
 
-                                <ParticleButton
+                                <BaseButton
+                                    variant="primary"
+                                    size="lg"
                                     onClick={() => setIsDeepStudyActive(true)}
-                                    className="w-full py-5 text-sm font-black uppercase tracking-[0.2em] shadow-glow-cyan bg-gradient-to-r from-cosmic-cyan to-cosmic-cyan/80 text-black border-none"
+                                    className="w-full tracking-[0.2em]"
+                                    leftIcon={<Zap size={16} />}
                                 >
-                                    Initialize Deep Study Mode
-                                </ParticleButton>
+                                    Activate Study
+                                </BaseButton>
                             </div>
                         </div>
                     </motion.section>
 
-                    {/* Onboarding / "Getting Started" Section */}
-                    {hasNoActivity && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mb-16"
-                        >
-                            <GlassCard className="bg-gradient-to-br from-cosmic-purple/20 via-[#0f0326]/40 to-cosmic-pink/10 border-white/10 p-8 md:p-16 relative overflow-hidden group">
-                                <div className="absolute -right-20 -top-20 w-96 h-96 bg-cosmic-cyan/10 blur-[120px] group-hover:bg-cosmic-cyan/20 transition-all duration-1000" />
-                                <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-cosmic-purple/10 blur-[120px] group-hover:bg-cosmic-purple/20 transition-all duration-1000" />
-
-                                <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
-                                    <motion.div
-                                        animate={{
-                                            y: [0, -10, 0],
-                                            rotate: [0, 5, 0]
-                                        }}
-                                        transition={{
-                                            duration: 5,
-                                            repeat: Infinity,
-                                            ease: "easeInOut"
-                                        }}
-                                        className="p-10 rounded-[3.5rem] bg-white/5 border border-white/10 shadow-2xl shadow-purple-500/20 backdrop-blur-3xl"
-                                    >
-                                        <Rocket className="w-20 h-20 text-cosmic-pink drop-shadow-glow-pink" strokeWidth={1} />
-                                    </motion.div>
-
-                                    <div className="flex-1 text-center md:text-left">
-                                        <div className="inline-block px-4 py-1 rounded-full bg-cosmic-pink/10 border border-cosmic-pink/20 text-cosmic-pink text-[10px] font-mono tracking-[0.3em] uppercase mb-6">
-                                            Mission Protocol Initialized
-                                        </div>
-                                        <h2 className="text-5xl font-display font-bold text-white mb-6 leading-tight">
-                                            Initialise Your <span className="text-gradient-cosmic">Learning Vector</span>
-                                        </h2>
-                                        <p className="text-gray-400 text-xl font-light max-w-2xl mb-10 leading-relaxed">
-                                            Welcome to Dyano. Your neural pathways are ready for synthesis. Launch your first adaptive challenge or explore professional roadmaps to begin your evolution.
-                                        </p>
-                                        <div className="flex flex-wrap gap-6 justify-center md:justify-start">
-                                            <ParticleButton
-                                                onClick={() => navigate('/quiz')}
-                                                className="px-10 py-4"
-                                            >
-                                                Launch Quiz Lab
-                                            </ParticleButton>
-                                            <ParticleButton
-                                                variant="outline"
-                                                onClick={() => navigate('/roadmap')}
-                                                className="px-10 py-4"
-                                            >
-                                                Explore Roadmaps
-                                            </ParticleButton>
-                                        </div>
-                                    </div>
-                                </div>
-                            </GlassCard>
-                        </motion.div>
-                    )}
-
-                    {/* Tools Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
+                    {/* Modules Grid - High Density Bento Override */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-24">
                         {LEARNING_TOOLS && LEARNING_TOOLS.map((tool, index) => {
                             const ToolIcon = tool.Icon || Zap;
+                            // Bento Strategy: 8-span, 4-span, 4-span, 8-span pattern
+                            const bentoClass = index % 4 === 0 || index % 4 === 3 ? "md:col-span-8" : "md:col-span-4";
+
                             return (
                                 <motion.div
                                     key={tool.id}
                                     initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 + index * 0.1 }}
-                                    className={index === 0 ? "md:col-span-8" : "md:col-span-4"}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 260,
+                                        damping: 20,
+                                        delay: index * 0.1
+                                    }}
+                                    className={bentoClass}
                                 >
-                                    <Tooltip
-                                        text={
-                                            tool.id === 'pdf' ? "Neuro-Synthesis: " + tool.description :
-                                                tool.id === 'quiz' ? "Adaptive Complexity: " + tool.description :
-                                                    tool.description
-                                        }
-                                        position="bottom"
+                                    <LuxuryCard
+                                        variant="glass"
+                                        layoutId={`card-${tool.id}`}
+                                        onClick={() => navigate(tool.path)}
+                                        className="h-full cursor-pointer group border-white/5"
+                                        data-cursor="neural"
                                     >
-                                        <GlassCard
-                                            onClick={() => navigate(tool.path)}
-                                            className={`h-full group cursor-pointer relative overflow-hidden transition-all duration-700 ${index === 0 ? 'p-8 md:p-16' : 'p-10'}`}
-                                            glow={index === 0}
-                                            glowColor={tool.id === 'quiz' ? 'pink' : 'cyan'}
-                                        >
-                                            {/* Decorative Background numbers */}
-                                            <div className="absolute right-0 bottom-0 text-[120px] font-black text-white/[0.02] translate-y-1/2 translate-x-1/4 pointer-events-none group-hover:scale-110 transition-transform duration-1000 uppercase italic">
-                                                {tool.id}
-                                            </div>
-
-                                            <div className={`flex ${index === 0 ? 'flex-row' : 'flex-col'} items-start gap-10`}>
-                                                <div className={`p-6 rounded-[2rem] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 group-hover:border-white/20 group-hover:scale-110 transition-all duration-500 shadow-2xl`}>
-                                                    <ToolIcon className={`w-12 h-12 ${index === 0 ? 'text-cosmic-pink' : 'text-cosmic-cyan'}`} strokeWidth={1} />
+                                        <LuxuryContent className="p-10 md:p-14">
+                                            <div className="flex flex-col h-full">
+                                                <div className="w-16 h-16 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-white/40 group-hover:bg-white/5 group-hover:text-white group-hover:border-white/20 transition-all duration-700 mb-10 shadow-2xl">
+                                                    <ToolIcon size={28} strokeWidth={1} />
                                                 </div>
-                                                <div className="flex-1 text-left relative z-10">
-                                                    <div className="flex items-center gap-4 mb-4">
-                                                        <h3 className={`font-display font-black text-white ${index === 0 ? 'text-5xl' : 'text-3xl'}`}>
-                                                            {tool.title}
-                                                        </h3>
-                                                        <div className="w-2 h-2 rounded-full bg-cosmic-cyan opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity" />
+                                                <h3 className="text-h3 font-black text-white mb-4 group-hover:text-gray-300 transition-colors uppercase tracking-tight">{tool.title}</h3>
+                                                <p className="text-body text-white/50 font-light leading-relaxed mb-10 group-hover:text-white/70 transition-colors">
+                                                    {tool.description}
+                                                </p>
+                                                <div className="mt-auto flex items-center justify-between">
+                                                    <div className="text-[9px] font-mono text-white/20 tracking-[0.4em] uppercase group-hover:text-white/40 transition-colors">
+                                                        Protocol_0{index + 1}
                                                     </div>
-                                                    <p className={`text-gray-400 leading-relaxed font-light ${index === 0 ? 'text-xl max-w-lg' : 'text-sm'}`}>
-                                                        {tool.description}
-                                                    </p>
-
-                                                    <div className="mt-8 flex items-center gap-3">
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-cosmic-cyan group-hover:text-white transition-colors">Launch Module</span>
-                                                        <Rocket className="w-3 h-3 text-cosmic-cyan -rotate-90 group-hover:translate-x-1 transition-transform" />
+                                                    <div className="w-10 h-10 rounded-full border border-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                                                        <Rocket size={14} className="-rotate-90 text-white/40" />
                                                     </div>
-
-                                                    {tool.stats && (
-                                                        <div className="mt-12 pt-8 border-t border-white/5 grid grid-cols-2 gap-6">
-                                                            {Object.entries(tool.stats).map(([key, value]) => (
-                                                                <div key={key}>
-                                                                    <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest mb-1">{key}</div>
-                                                                    <div className="text-lg font-bold text-white group-hover:text-cosmic-pink transition-colors">{value}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
-                                        </GlassCard>
-                                    </Tooltip>
+                                        </LuxuryContent>
+                                    </LuxuryCard>
                                 </motion.div>
                             );
                         })}
                     </div>
 
-                    {RECENT_ACTIVITY && <ActivityFeed activities={RECENT_ACTIVITY} />}
+                    {RECENT_ACTIVITY && (
+                        <div className="border-t border-white/5 pt-24">
+                            <ActivityFeed activities={RECENT_ACTIVITY} />
+                        </div>
+                    )}
 
-                    {/* Quick Action Bar */}
-                    <footer className="mt-20 flex justify-center border-t border-white/5 pt-12">
-                        <ParticleButton variant="outline" size="sm" onClick={() => navigate('/progress')} className="rounded-none tracking-[0.2em] font-bold text-[10px] uppercase">
-                            Full Archive Access
-                        </ParticleButton>
+                    {/* Bottom Utility Bar - Minimalist */}
+                    <footer className="mt-32 py-16 border-t border-white/5 flex flex-col items-center gap-10">
+                        <div className="flex items-center gap-4 text-[9px] font-mono text-white/20 tracking-[0.5em] uppercase">
+                            <Shield size={12} className="opacity-40" />
+                            <span>Node Segment Alpha Active</span>
+                        </div>
+                        <BaseButton
+                            variant="secondary"
+                            size="md"
+                            onClick={() => navigate('/progress')}
+                            className="bg-transparent border-white/5 text-[10px] uppercase font-black tracking-[0.3em] hover:bg-white hover:text-black"
+                        >
+                            Open Neural Archives
+                        </BaseButton>
                     </footer>
                 </div>
             </main>

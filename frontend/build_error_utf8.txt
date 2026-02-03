@@ -1,0 +1,79 @@
+﻿
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 161 modules transformed.
+node.exe : [31mΓ£ù[39m 
+Build failed in 2.05s
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: ([31m  
+  Γ£ù[39m Build failed i   
+ n 2.05s:String) [], Rem    
+oteException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+[31merror during build:
+[31msrc/constants/landingCo
+ntent.js (7:14): Expression 
+expected[31m
+file: [36mD:/Games/Implemen
+tation/frontend/src/constant
+s/landingContent.js:7:14[31
+m
+[33m
+5:     {
+6:         id: 'quiz',
+7:         icon: <Target 
+size={24} />,
+                 ^
+8:         title: 'AI Quiz 
+Lab',
+9:         description: 
+'Generate intelligent 
+quizzes on any topic with 
+adaptive difficulty that 
+evolves with your maste...
+[31m
+    at getRollupError (file:
+///D:/Games/Implementation/f
+rontend/node_modules/rollup/
+dist/es/shared/parseAst.js:4
+00:41)
+    at 
+ParseError.initialise (file:
+///D:/Games/Implementation/f
+rontend/node_modules/rollup/
+dist/es/shared/node-entry.js
+:14461:28)
+    at convertNode (file:///
+D:/Games/Implementation/fron
+tend/node_modules/rollup/dis
+t/es/shared/node-entry.js:16
+433:10)
+    at convertProgram (file:
+///D:/Games/Implementation/f
+rontend/node_modules/rollup/
+dist/es/shared/node-entry.js
+:15673:12)
+    at Module.setSource (fil
+e:///D:/Games/Implementation
+/frontend/node_modules/rollu
+p/dist/es/shared/node-entry.
+js:17388:24)
+    at async ModuleLoader.ad
+dModuleSource (file:///D:/Ga
+mes/Implementation/frontend/
+node_modules/rollup/dist/es/
+shared/node-entry.js:21453:1
+3)[39m

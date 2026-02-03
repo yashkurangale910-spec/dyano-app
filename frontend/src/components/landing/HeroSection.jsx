@@ -35,8 +35,8 @@ export default function HeroSection({ content, onLaunch, onSignIn }) {
                             {/* Cinematic Typography */}
                             <h1 className="text-7xl md:text-8xl lg:text-[10rem] font-display font-black text-white leading-[0.8] tracking-[-0.06em] mb-12">
                                 {content.subtitle.split(' ').map((word, i) => (
-                                    <span key={i} className={i === 1 ? "text-gradient-kinetic block" : "block"}>
-                                        {word}
+                                    <span key={i} className={i === 1 ? "text-gradient-kinetic inline-block" : "inline-block"}>
+                                        {word}&nbsp;
                                     </span>
                                 ))}
                             </h1>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Award, Zap, Star, Shield, Zap as Flash } from 'lucide-react';
+import { Award, Zap, Star, Shield, Zap as Flash, Flame, Rocket } from 'lucide-react';
 
 const BADGE_CONFIG = {
     'roadmap_master': {

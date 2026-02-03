@@ -2,6 +2,7 @@ import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial, Center } from '@react-three/drei';
 import * as THREE from 'three';
+import { motion } from 'framer-motion';
 
 const BrainPoints = ({ density = {} }) => {
     const ref = useRef();
@@ -88,7 +89,7 @@ const BrainPoints = ({ density = {} }) => {
 export default function NeuralDigitalTwin({ density }) {
     return (
         <div className="w-full h-full min-h-[400px] relative">
-            <Canvas camera={{ position: [0, 0, 5], fmax: 75 }}>
+            <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
                 <ambientLight intensity={0.5} />
                 <Center>
                     <BrainPoints density={density} />
