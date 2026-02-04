@@ -23,6 +23,7 @@ const ImageGen = lazy(() => import('./pages/ImageGen'));
 import LoadingState from './components/ui/LoadingState';
 import NeuralCursor from './components/ui/NeuralCursor';
 import { AtmosphericProvider } from './context/AtmosphericContext';
+import { TutorProvider } from './context/TutorContext';
 
 const queryClient = new QueryClient();
 
@@ -42,34 +43,36 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Suspense fallback={<LoadingScreen />}>
-            <AtmosphericProvider>
-              <Routes>
-                <Route path="/chatbot" element={<ChatBot />} />
-
-                <Route element={<LayoutShell />}>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-
-                  {/* All Routes - No Authentication Required */}
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/quiz" element={<QuizLab />} />
-                  <Route path="/flashcards" element={<FlashcardSpace />} />
-                  <Route path="/pdf" element={<PDFLab />} />
-                  <Route path="/progress" element={<ProgressJourney />} />
-                  <Route path="/roadmap" element={<Roadmap />} />
-                  <Route path="/imagine" element={<ImageGen />} />
+        <TutorProvider>
+          <Router>
+            <Suspense fallback={<LoadingScreen />}>
+              <AtmosphericProvider>
+                <Routes>
                   <Route path="/chatbot" element={<ChatBot />} />
-                </Route>
-              </Routes>
-            </AtmosphericProvider>
-          </Suspense>
-          <Toaster position="top-right" />
-          <NeuralCursor />
-        </Router>
+
+                  <Route element={<LayoutShell />}>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+
+                    {/* All Routes - No Authentication Required */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/quiz" element={<QuizLab />} />
+                    <Route path="/flashcards" element={<FlashcardSpace />} />
+                    <Route path="/pdf" element={<PDFLab />} />
+                    <Route path="/progress" element={<ProgressJourney />} />
+                    <Route path="/roadmap" element={<Roadmap />} />
+                    <Route path="/imagine" element={<ImageGen />} />
+                    <Route path="/chatbot" element={<ChatBot />} />
+                  </Route>
+                </Routes>
+              </AtmosphericProvider>
+            </Suspense>
+            <Toaster position="top-right" />
+            {/* <NeuralCursor /> */}
+          </Router>
+        </TutorProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
