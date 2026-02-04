@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
+import { useTutorContext } from '../context/TutorContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3005';
 
 export default function useTutor() {
+    const { personality, setPersonality, depth, setDepth, language, setLanguage } = useTutorContext();
     const [status, setStatus] = useState('idle'); // idle | loading | error
     const [error, setError] = useState(null);
     const [sessions, setSessions] = useState([]);
@@ -58,7 +60,7 @@ export default function useTutor() {
         }
     }, []);
 
-    const sendMessage = useCallback(async ({ message, image, personality, depth, sessionId, documentId, isDeepContext, language, framework, debug }) => {
+    const sendMessage = useCallback(async ({ message, image, sessionId, documentId, isDeepContext, debug }) => {
         console.log('🚀 sendMessage triggered', { message, hasImage: !!image });
         setStatus('loading');
 
@@ -71,7 +73,7 @@ export default function useTutor() {
         if (documentId) formData.append('documentId', documentId);
         if (isDeepContext !== undefined) formData.append('isDeepContext', isDeepContext);
         if (language) formData.append('language', language);
-        if (framework) formData.append('framework', framework);
+        // if (framework) formData.append('framework', framework);
         if (debug) formData.append('debug', debug);
 
         try {
@@ -101,9 +103,9 @@ export default function useTutor() {
             setTimeout(() => setStatus('idle'), 3000);
             throw error;
         }
-    }, []);
+    }, [personality, depth, language]); // Add context values as dependencies
 
-    const gradeEssay = useCallback(async (essay, rubric, language, framework) => {
+    const gradeEssay = useCallback(async (essay, rubric, framework) => {
         setStatus('loading');
         try {
             const response = await axios.post(`${API_URL}/tutor/grade-essay`, { essay, rubric, language, framework }, {
@@ -118,9 +120,9 @@ export default function useTutor() {
             setStatus('error');
             throw error;
         }
-    }, []);
+    }, [language]);
 
-    const solveProblem = useCallback(async (problem, subject, language, framework) => {
+    const solveProblem = useCallback(async (problem, subject, framework) => {
         setStatus('loading');
         try {
             const response = await axios.post(`${API_URL}/tutor/solve-problem`, { problem, subject, language, framework }, {
@@ -135,7 +137,7 @@ export default function useTutor() {
             setStatus('error');
             throw error;
         }
-    }, []);
+    }, [language]);
 
     const fetchProgress = useCallback(async () => {
         try {
@@ -150,6 +152,11 @@ export default function useTutor() {
         }
     }, []);
 
+    // Chat-specific state (for ChatBot component)
+    const [messages, setMessages] = useState([]);
+    const [selectedPdf, setSelectedPdf] = useState(null);
+    const [pdfList, setPdfList] = useState([]);
+
     return {
         status,
         error,
@@ -162,6 +169,19 @@ export default function useTutor() {
         gradeEssay,
         solveProblem,
         fetchProgress,
-        setCurrentSession
+        setCurrentSession,
+        // Chat component state
+        messages,
+        setMessages,
+        language,
+        setLanguage,
+        personality,
+        setPersonality,
+        depth,
+        setDepth,
+        selectedPdf,
+        setSelectedPdf,
+        pdfList,
+        setPdfList
     };
 }
